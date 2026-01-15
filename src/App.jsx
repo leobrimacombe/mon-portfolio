@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber'; // J'ai ajouté useThree
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, Environment } from '@react-three/drei';
 import { motion } from 'framer-motion';
 
@@ -43,19 +43,110 @@ const PROJECTS_DATA = [
   }
 ];
 
-// --- TEXTE DU BANDEAU ---
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • ";
 
-// --- 3D ELEMENT (RESPONSIVE) ---
+// --- NOUVEAU COMPOSANT : TEXTE QUI GLITCH / VIBRE ---
+const GlitchText = ({ text, position, fontSize, color, isNeon = false }) => {
+  const [hovered, setHover] = useState(false);
+  const mainRef = useRef();
+  const ghost1Ref = useRef();
+  const ghost2Ref = useRef();
+
+  // Animation de vibration (Glitch)
+  useFrame(({ clock }) => {
+    // Si survolé, on fait vibrer les calques
+    if (hovered) {
+      const t = clock.getElapsedTime();
+      const intensity = 0.04; // Force de la vibration
+
+      // Calque 1 (Cyan) - Vibre aléatoirement
+      if (ghost1Ref.current) {
+        ghost1Ref.current.position.x = position[0] + (Math.random() - 0.5) * intensity;
+        ghost1Ref.current.position.y = position[1] + (Math.random() - 0.5) * intensity;
+      }
+      
+      // Calque 2 (Rouge/Rose) - Vibre à l'opposé
+      if (ghost2Ref.current) {
+        ghost2Ref.current.position.x = position[0] + (Math.random() - 0.5) * intensity;
+        ghost2Ref.current.position.y = position[1] + (Math.random() - 0.5) * intensity;
+      }
+
+      // Texte Principal - Vibre très légèrement
+      if (mainRef.current) {
+        mainRef.current.position.x = position[0] + (Math.random() - 0.5) * (intensity / 2);
+      }
+    } else {
+      // Remise en place douce quand on quitte
+      if (mainRef.current) mainRef.current.position.x = position[0];
+    }
+  });
+
+  // Gestion du curseur
+  useEffect(() => {
+    document.body.style.cursor = hovered ? 'pointer' : 'auto';
+    return () => { document.body.style.cursor = 'auto'; }
+  }, [hovered]);
+
+  const commonProps = {
+    font: "/Michroma-Regular.ttf",
+    fontSize: fontSize,
+    letterSpacing: -0.05,
+    anchorX: "center",
+    anchorY: "middle",
+  };
+
+  return (
+    <group 
+      onPointerOver={() => setHover(true)} 
+      onPointerOut={() => setHover(false)}
+    >
+      {/* EFFET HOLOGRAMME (Visible seulement au survol) */}
+      {hovered && (
+        <>
+          {/* Ghost Cyan */}
+          <Text ref={ghost1Ref} {...commonProps} position={position} fillOpacity={0.5}>
+            {text}
+            <meshBasicMaterial color="#00ffff" transparent opacity={0.4} toneMapped={false} />
+          </Text>
+          {/* Ghost Magenta */}
+          <Text ref={ghost2Ref} {...commonProps} position={position} fillOpacity={0.5}>
+            {text}
+            <meshBasicMaterial color="#ff00ff" transparent opacity={0.4} toneMapped={false} />
+          </Text>
+        </>
+      )}
+
+      {/* TEXTE PRINCIPAL */}
+      <Text 
+        ref={mainRef}
+        {...commonProps} 
+        position={position}
+        // Si c'est le titre principal, on garde le contour blanc
+        fillOpacity={1}
+        strokeWidth={isNeon ? 0 : 0.04}
+        strokeColor={isNeon ? "transparent" : "white"}
+      >
+        {text}
+        {isNeon ? (
+          <meshStandardMaterial 
+            color={color} 
+            emissive={hovered ? "#ffffff" : "#4f46e5"} // Flash blanc au survol
+            emissiveIntensity={hovered ? 2 : 1}
+            toneMapped={false} 
+          />
+        ) : (
+          <meshStandardMaterial color={hovered ? "#ddd" : "white"} toneMapped={false} />
+        )}
+      </Text>
+    </group>
+  );
+};
+
+// --- 3D ELEMENT (RESPONSIVE + GLITCH) ---
 function HeroText() {
   const groupRef = useRef();
-  
-  // 1. On récupère la largeur du viewport (l'écran 3D)
   const { viewport } = useThree();
 
-  // 2. Logique de redimensionnement
-  // Le texte "LEO BRIMACOMBE" fait environ 12 unités de large avec fontSize={1}
-  // Si l'écran est plus petit que 12 unités, on réduit l'échelle.
   const targetWidth = 12; 
   const scaleFactor = viewport.width < targetWidth ? viewport.width / targetWidth : 1;
 
@@ -71,39 +162,26 @@ function HeroText() {
   });
 
   return (
-    // 3. On applique le scaleFactor ici pour tout réduire proportionnellement
     <group ref={groupRef} scale={scaleFactor}>
-      {/* LIGNE 1 */}
-      <Text
-        font="/Michroma-Regular.ttf"
-        fontSize={1}
-        letterSpacing={-0.05}
-        anchorX="center"
-        anchorY="middle"
-        position={[0, 0.6, 0]}
-        fillOpacity={1} 
-        strokeWidth={0.04}
-        strokeColor="white"
-      >
-        PORTFOLIO
-        <meshStandardMaterial color="white" toneMapped={false} />
-      </Text>
+      {/* Utilisation du nouveau composant GlitchText */}
       
-      {/* LIGNE 2 */}
-      <Text
-        font="/Michroma-Regular.ttf"
-        fontSize={0.9}
-        letterSpacing={-0.05}
-        anchorX="center"
-        anchorY="middle"
-        position={[0, -0.8, 0]}
-      >
-        LEO BRIMACOMBE
-        <meshStandardMaterial 
-            color="rgb(68, 127, 255)" 
-            toneMapped={false}
-        />
-      </Text>
+      {/* LIGNE 1 : PORTFOLIO */}
+      <GlitchText 
+        text="PORTFOLIO" 
+        position={[0, 0.6, 0]} 
+        fontSize={0.9} 
+        color="white" 
+        isNeon={false} 
+      />
+      
+      {/* LIGNE 2 : TON NOM (Neon) */}
+      <GlitchText 
+        text="LEO BRIMACOMBE" 
+        position={[0, -0.8, 0]} 
+        fontSize={0.9} 
+        color="rgb(68, 127, 255)" 
+        isNeon={true} 
+      />
     </group>
   );
 }
@@ -126,11 +204,9 @@ const ProjectModal = ({ project, onClose }) => {
         >
           ✕
         </button>
-        {/* Image : hauteur ajustée pour mobile */}
         <div className="w-full h-[40%] md:w-1/2 md:h-full relative bg-gray-900">
             <img src={project.image} className="w-full h-full object-cover opacity-80" alt={project.title} />
         </div>
-        {/* Contenu : scrollable si trop long sur mobile */}
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-white overflow-y-auto">
            <h2 className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</h2>
            <p className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</p>
@@ -151,22 +227,25 @@ export default function App() {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      document.body.style.overflowX = 'hidden'; // Empêche le scroll horizontal global
+      document.body.style.overflowX = 'hidden';
     }
     return () => { document.body.style.overflow = ''; };
   }, [selectedProject]);
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden"> {/* overflow-x-hidden ici aussi */}
+    <div className="relative w-full min-h-screen overflow-x-hidden">
       
       {/* 1. LAYER 3D */}
       <div 
         style={{ 
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', 
-          zIndex: 0, pointerEvents: 'none'
+          zIndex: 0, pointerEvents: 'none' // Le pointerEvents est géré par les objets 3D s'ils sont interactifs
         }}
       >
-        <Canvas camera={{ position: [0, 0, 7], fov: 50 }} events={null}>
+        {/* On doit activer les events 'pointerEvents: auto' sur le Canvas pour que le hover marche, 
+            MAIS seulement sur le Canvas, pas la div container qui est zIndex 0.
+            Astuce : On laisse le Canvas gérer les events. */}
+        <Canvas camera={{ position: [0, 0, 7], fov: 50 }} style={{ pointerEvents: 'auto' }}>
             <ambientLight intensity={2} />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={5} />
             <pointLight position={[-10, -10, -10]} intensity={5} color="#4f46e5" />
@@ -176,27 +255,25 @@ export default function App() {
       </div>
 
       {/* 2. LAYER CONTENU */}
-      <main className="relative z-10 w-full flex flex-col min-h-screen">
+      <main className="relative z-10 w-full flex flex-col min-h-screen pointer-events-none">
         
-        <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-40 mix-blend-difference text-white pointer-events-none">
-            {/* Taille de police réduite sur mobile pour éviter que ça touche les bords */}
+        {/* Navbar (On remet pointer-events-auto sur les éléments cliquables) */}
+        <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-40 mix-blend-difference text-white">
             <span className="font-sync font-bold text-sm md:text-lg pointer-events-auto cursor-pointer">Léo Brimacombe</span>
             <div className="flex gap-6 font-mono text-xs hidden md:flex pointer-events-auto">
                 <a href="#about" className="hover:text-blue-400 cursor-pointer transition-colors">A PROPOS</a>
                 <a href="#work" className="hover:text-blue-400 cursor-pointer transition-colors">MON TRAVAIL</a>
                 <a href="#contact" className="hover:text-blue-400 cursor-pointer transition-colors">CONTACT</a>
             </div>
-            {/* Menu burger simplifié pour mobile (visuel uniquement ici si tu veux faire simple, ou juste cacher les liens) */}
         </nav>
 
-        <section className="h-screen w-full flex flex-col justify-end p-8 pb-32 pointer-events-none">
+        <section className="h-screen w-full flex flex-col justify-end p-8 pb-32">
              <div className="text-center text-xs font-mono text-gray-500 animate-pulse">( DESCENDEZ )</div>
         </section>
 
-        {/* CONTENEUR PRINCIPAL */}
-        <div className="bg-[#050505] w-full relative z-20 shadow-[0_-50px_100px_rgba(5,5,5,1)]">
+        {/* CONTENEUR PRINCIPAL (Pointer events auto pour pouvoir scroller et cliquer) */}
+        <div className="bg-[#050505] w-full relative z-20 shadow-[0_-50px_100px_rgba(5,5,5,1)] pointer-events-auto">
             
-            {/* MARQUEE */}
             <div className="bg-blue-600 text-black py-2 overflow-hidden w-full">
                 <div className="flex animate-marquee whitespace-nowrap">
                     <span className="text-2xl md:text-4xl font-black font-sync mx-4">
@@ -208,7 +285,6 @@ export default function App() {
                 </div>
             </div>
 
-            {/* SECTION A PROPOS */}
             <section id="about" className="py-20 md:py-32 px-6 max-w-7xl mx-auto border-b border-white/10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
                     <div>
@@ -254,7 +330,6 @@ export default function App() {
                 </div>
             </section>
 
-            {/* SECTION TRAVAUX (MISE A JOUR) */}
             <section id="work" className="py-20 md:py-24 px-6 max-w-7xl mx-auto border-b border-white/10">
                 <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-12 uppercase">mes travaux</h2>
                 <div className="flex flex-col gap-2">
@@ -270,7 +345,6 @@ export default function App() {
                       >
                         <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
                             <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
-                            {/* Titre responsive : plus petit sur mobile */}
                             <h3 className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">{p.title}</h3>
                         </div>
                         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
@@ -282,7 +356,6 @@ export default function App() {
                 </div>
             </section>
 
-            {/* SECTION CONTACT */}
             <footer id="contact" className="py-20 md:py-32 px-6 bg-blue-600 text-white min-h-[50vh] md:min-h-[70vh] flex flex-col justify-between">
                 
                 <div className="max-w-7xl mx-auto w-full">
@@ -302,7 +375,6 @@ export default function App() {
                 <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 md:gap-8 my-8 md:my-12">
                     <motion.a 
                         href="mailto:leo.brimacombe@free.fr" 
-                        // Taille ajustée pour éviter la casse sur petit écran
                         className="text-[9vw] md:text-[2vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none"
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
