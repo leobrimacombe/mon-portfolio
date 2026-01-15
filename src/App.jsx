@@ -59,9 +59,9 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   
   const animation = useMemo(() => ({
     // Distance de départ
-    startZ: -3 - Math.random() * 20, 
+    startZ: 0 - Math.random() * 20, 
     // Vitesse (Rapide)
-    speed: 5 + Math.random() * 5,
+    speed: 8 + Math.random() * 5,
     // Petit délai supplémentaire pour décaler les lettres
     delay: Math.random() * 0.2 
   }), []);
