@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
-import { motion, AnimatePresence } from 'framer-motion'; // AJOUT DE AnimatePresence
+import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 
 // --- DONNÉES ---
@@ -46,7 +46,7 @@ const PROJECTS_DATA = [
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE (IDENTIQUE) ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
@@ -109,7 +109,7 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   );
 };
 
-// --- CONTENEUR DE MOTS (IDENTIQUE) ---
+// --- CONTENEUR DE MOTS ---
 const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
   const getCharWidth = (char) => {
     const widthMap = { 'I': 0.3, 'i': 0.3, 'L': 0.7, 'l': 0.6, 'T': 0.8, 'F': 0.8, ' ': 0.3, 'M': 1.2, 'W': 1.1 };
@@ -134,7 +134,7 @@ const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
   );
 };
 
-// --- SCÈNE 3D (IDENTIQUE) ---
+// --- SCÈNE 3D ---
 function HeroText() {
   const groupRef = useRef();
   const { viewport } = useThree();
@@ -160,66 +160,20 @@ function HeroText() {
   );
 }
 
-// --- MODALE MODIFIÉE POUR ANIMATION LAYOUT ---
+// --- MODALE PROJET ---
 const ProjectModal = ({ project, onClose }) => {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
-      
-      {/* 1. FOND NOIR (Fade In/Out simple) */}
-      <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/95 backdrop-blur-sm"
-      />
-
-      {/* 2. CARTE QUI S'AGRANDIT (Shared Layout Animation) */}
-      {/* layoutId correspond à celui de l'élément cliqué dans la liste */}
-      <motion.div 
-        layoutId={`project-${project.id}`} 
-        className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl z-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 z-50 bg-white text-black w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-lg md:text-xl hover:scale-110 transition cursor-pointer"
-        >
-          ✕
-        </button>
-        
-        {/* L'image */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-sm" />
+      <motion.div layoutId={`project-${project.id}`} className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl z-10" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-white text-black w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-lg md:text-xl hover:scale-110 transition cursor-pointer">✕</button>
         <div className="w-full h-[40%] md:w-1/2 md:h-full relative bg-gray-900">
-            <motion.img 
-                src={project.image} 
-                className="w-full h-full object-cover opacity-80" 
-                alt={project.title} 
-            />
+            <motion.img src={project.image} className="w-full h-full object-cover opacity-80" alt={project.title} />
         </div>
-
-        {/* Le contenu textuel */}
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-white overflow-y-auto">
-           {/* layout="position" permet au texte de glisser doucement */}
            <motion.h2 layout="position" className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</motion.h2>
-           
-           <motion.p 
-             initial={{ opacity: 0, y: 10 }} 
-             animate={{ opacity: 1, y: 0 }} 
-             transition={{ delay: 0.2 }}
-             className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed"
-           >
-             {project.description}
-           </motion.p>
-           
-           <motion.a 
-             initial={{ opacity: 0, y: 10 }} 
-             animate={{ opacity: 1, y: 0 }} 
-             transition={{ delay: 0.3 }}
-             href={project.link} target="_blank" rel="noreferrer" 
-             className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer"
-           >
-             Voir le projet
-           </motion.a>
+           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</motion.p>
+           <motion.a initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} href={project.link} target="_blank" rel="noreferrer" className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer">Voir le projet</motion.a>
         </div>
       </motion.div>
     </div>
@@ -228,16 +182,17 @@ const ProjectModal = ({ project, onClose }) => {
 
 export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
+  const [isMenuOpen, setMenuOpen] = useState(false); // ÉTAT DU MENU MOBILE
 
   useEffect(() => {
-    if (selectedProject) {
+    if (selectedProject || isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
       document.body.style.overflowX = 'hidden';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [selectedProject]);
+  }, [selectedProject, isMenuOpen]);
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden">
@@ -256,14 +211,64 @@ export default function App() {
       {/* 2. LAYER CONTENU */}
       <main className="relative z-10 w-full flex flex-col min-h-screen pointer-events-none">
         
-        <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-40 mix-blend-difference text-white">
-            <span className="font-sync font-bold text-sm md:text-lg pointer-events-auto cursor-pointer">Léo Brimacombe</span>
-            <div className="flex gap-6 font-mono text-xs hidden md:flex pointer-events-auto">
+        {/* NAV MODIFIÉE POUR MOBILE */}
+        <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 text-white mix-blend-difference md:mix-blend-normal">
+            
+            <span className="font-sync font-bold text-sm md:text-lg pointer-events-auto cursor-pointer z-50 mix-blend-difference">Léo Brimacombe</span>
+            
+            {/* MENU PC (Invisible sur Mobile) */}
+            <div className="hidden md:flex gap-6 font-mono text-xs pointer-events-auto mix-blend-difference">
                 <a href="#about" className="hover:text-blue-400 cursor-pointer transition-colors">A PROPOS</a>
                 <a href="#work" className="hover:text-blue-400 cursor-pointer transition-colors">MON TRAVAIL</a>
                 <a href="#contact" className="hover:text-blue-400 cursor-pointer transition-colors">CONTACT</a>
             </div>
+
+            {/* BOUTON BURGER (Visible uniquement sur Mobile) */}
+            <button 
+                onClick={() => setMenuOpen(!isMenuOpen)}
+                className="md:hidden pointer-events-auto z-50 font-mono text-xs border border-white/50 px-4 py-2 rounded-full backdrop-blur-md bg-black/20 text-white"
+            >
+                {isMenuOpen ? 'FERMER' : 'MENU +'}
+            </button>
         </nav>
+
+        {/* MENU MOBILE PLEIN ÉCRAN */}
+        <AnimatePresence>
+            {isMenuOpen && (
+                <motion.div
+                    initial={{ x: "100%" }}
+                    animate={{ x: 0 }}
+                    exit={{ x: "100%" }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="fixed inset-0 z-40 bg-black flex flex-col justify-center items-center gap-8 pointer-events-auto md:hidden"
+                >
+                    <motion.div className="flex flex-col gap-8 text-center" initial="closed" animate="open" variants={{ open: { transition: { staggerChildren: 0.1 } } }}>
+                        {['A PROPOS', 'MES TRAVAUX'].map((item, i) => (
+                            <motion.a 
+                                key={item}
+                                href={item === 'A PROPOS' ? '#about' : '#work'}
+                                onClick={() => setMenuOpen(false)}
+                                variants={{ closed: { opacity: 0, y: 20 }, open: { opacity: 1, y: 0 } }}
+                                className="text-4xl font-sync font-black text-white hover:text-blue-600 transition-colors"
+                            >
+                                {item}
+                            </motion.a>
+                        ))}
+                    </motion.div>
+
+                    <motion.a 
+                        href="#contact"
+                        onClick={() => setMenuOpen(false)}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-8 px-8 py-4 bg-blue-600 text-white font-bold font-mono rounded-full uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all"
+                    >
+                        Contact
+                    </motion.a>
+                </motion.div>
+            )}
+        </AnimatePresence>
 
         <section className="h-screen w-full flex flex-col justify-end p-8 pb-32">
              <div className="text-center text-xs font-mono text-gray-500 animate-pulse">( DESCENDEZ )</div>
@@ -303,13 +308,11 @@ export default function App() {
                 </div>
             </section>
 
-            {/* SECTION TRAVAUX (MODIFIÉE AVEC LAYOUT ID) */}
             <section id="work" className="py-20 md:py-24 px-6 max-w-7xl mx-auto border-b border-white/10">
                 <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-12 uppercase">mes travaux</h2>
                 <div className="flex flex-col gap-2">
                     {PROJECTS_DATA.map((p, i) => (
                       <motion.div 
-                        // C'EST ICI LA MAGIE : layoutId connecte la liste à la modale
                         layoutId={`project-${p.id}`}
                         key={p.id}
                         onClick={() => setSelectedProject(p)} 
@@ -321,7 +324,6 @@ export default function App() {
                       >
                         <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
                             <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
-                            {/* layout="position" permet au texte de bouger naturellement */}
                             <motion.h3 layout="position" className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">
                                 {p.title}
                             </motion.h3>
@@ -358,7 +360,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* AJOUT DE ANMATE PRESENCE POUR LA SORTIE FLUIDE */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
