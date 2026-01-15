@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Text, Environment } from '@react-three/drei';
+import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
 import { motion } from 'framer-motion';
+import * as THREE from 'three';
 
-// --- DONNÉES MISES À JOUR ---
+// --- DONNÉES ---
 const PROJECTS_DATA = [
   { 
     id: 1, 
@@ -45,108 +46,144 @@ const PROJECTS_DATA = [
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • ";
 
-// --- NOUVEAU COMPOSANT : TEXTE QUI GLITCH / VIBRE ---
-const GlitchText = ({ text, position, fontSize, color, isNeon = false }) => {
-  const [hovered, setHover] = useState(false);
-  const mainRef = useRef();
-  const ghost1Ref = useRef();
-  const ghost2Ref = useRef();
+// --- COMPOSANT : LETTRE INDIVIDUELLE INTELLIGENTE ---
+const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
+  const meshRef = useRef();
+  const materialRef = useRef();
+  const { viewport } = useThree();
+  
+  // Vecteur pour stocker la position mondiale de la lettre
+  const worldPos = useMemo(() => new THREE.Vector3(), []);
 
-  // Animation de vibration (Glitch)
-  useFrame(({ clock }) => {
-    // Si survolé, on fait vibrer les calques
-    if (hovered) {
-      const t = clock.getElapsedTime();
-      const intensity = 0.04; // Force de la vibration
+  useFrame((state) => {
+    if (meshRef.current && materialRef.current) {
+      // 1. Où est la souris en 3D ?
+      const mouseX = (state.pointer.x * viewport.width) / 2;
+      const mouseY = (state.pointer.y * viewport.height) / 2;
 
-      // Calque 1 (Cyan) - Vibre aléatoirement
-      if (ghost1Ref.current) {
-        ghost1Ref.current.position.x = position[0] + (Math.random() - 0.5) * intensity;
-        ghost1Ref.current.position.y = position[1] + (Math.random() - 0.5) * intensity;
-      }
+      // 2. Où est cette lettre précise dans le monde ?
+      meshRef.current.getWorldPosition(worldPos);
+
+      // 3. Calcul de la distance entre la souris et la lettre
+      const dx = mouseX - worldPos.x;
+      const dy = mouseY - worldPos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // 4. Seuil d'activation (Rayon d'action de 1.5 unités)
+      // Plus la souris est proche, plus "influence" est grand (de 0 à 1)
+      const maxDist = 1.5;
+      const influence = Math.max(0, 1 - distance / maxDist);
+
+      // 5. APPLICATION DES EFFETS BASÉS SUR LA PROXIMITÉ
       
-      // Calque 2 (Rouge/Rose) - Vibre à l'opposé
-      if (ghost2Ref.current) {
-        ghost2Ref.current.position.x = position[0] + (Math.random() - 0.5) * intensity;
-        ghost2Ref.current.position.y = position[1] + (Math.random() - 0.5) * intensity;
+      // A. Déformation (Distortion)
+      // On vise 0.5 de distortion max quand la souris est dessus
+      materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, influence * 0.6, 0.1);
+      
+      // B. Vitesse de l'eau (Speed)
+      // Ça s'agite plus vite quand on est proche
+      materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, influence * 5, 0.1);
+
+      // C. Couleur (Glow)
+      // Si c'est Neon, on booste l'intensité. Sinon on passe du blanc au bleu.
+      if (isNeon) {
+         materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(2, 2 + influence * 5, 0.1);
+      } else {
+         // Changement subtil de couleur pour le texte blanc (vers le gris/bleuté)
+         const targetColor = influence > 0.2 ? new THREE.Color("#a5b4fc") : new THREE.Color("white");
+         materialRef.current.color.lerp(targetColor, 0.1);
       }
 
-      // Texte Principal - Vibre très légèrement
-      if (mainRef.current) {
-        mainRef.current.position.x = position[0] + (Math.random() - 0.5) * (intensity / 2);
-      }
-    } else {
-      // Remise en place douce quand on quitte
-      if (mainRef.current) mainRef.current.position.x = position[0];
+      // D. Petit mouvement de recul (Repulsion Z)
+      // La lettre recule légèrement quand on la touche
+      meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, position[2] - influence * 0.5, 0.1);
     }
   });
 
-  // Gestion du curseur
-  useEffect(() => {
-    document.body.style.cursor = hovered ? 'pointer' : 'auto';
-    return () => { document.body.style.cursor = 'auto'; }
-  }, [hovered]);
+  return (
+    <Text
+      ref={meshRef}
+      font="/Michroma-Regular.ttf"
+      fontSize={fontSize}
+      position={position}
+      anchorX="center"
+      anchorY="middle"
+    >
+      {char}
+      <MeshDistortMaterial
+        ref={materialRef}
+        color={baseColor}
+        speed={0} // Au repos, ça ne bouge pas
+        distort={0} // Au repos, pas de déformation
+        toneMapped={false}
+        emissive={isNeon ? baseColor : "black"}
+        emissiveIntensity={isNeon ? 2 : 0}
+      />
+    </Text>
+  );
+};
 
-  const commonProps = {
-    font: "/Michroma-Regular.ttf",
-    fontSize: fontSize,
-    letterSpacing: -0.05,
-    anchorX: "center",
-    anchorY: "middle",
+// --- CONTENEUR DE MOTS (KERNING CORRIGÉ) ---
+const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
+  
+  // 1. On définit la largeur spécifique pour les lettres "fines" de Michroma
+  // Michroma est une police large, donc le défaut est grand (0.9), 
+  // mais on réduit drastiquement pour I, L, T, F, etc.
+  const getCharWidth = (char) => {
+    const widthMap = {
+      'I': 0.3,
+      'i': 0.3,
+      'L': 0.7,
+      'l': 0.6,
+      'T': 0.8,
+      'F': 0.8,
+      ' ': 0.3, // Espace
+      'M': 1.2, // M un peu plus large
+      'W': 1.1  // W un peu plus large
+    };
+    // Si la lettre n'est pas dans la liste, on utilise 0.95 par défaut
+    return (widthMap[char] ?? 0.95) * fontSize;
   };
 
-  return (
-    <group 
-      onPointerOver={() => setHover(true)} 
-      onPointerOut={() => setHover(false)}
-    >
-      {/* EFFET HOLOGRAMME (Visible seulement au survol) */}
-      {hovered && (
-        <>
-          {/* Ghost Cyan */}
-          <Text ref={ghost1Ref} {...commonProps} position={position} fillOpacity={0.5}>
-            {text}
-            <meshBasicMaterial color="#00ffff" transparent opacity={0.4} toneMapped={false} />
-          </Text>
-          {/* Ghost Magenta */}
-          <Text ref={ghost2Ref} {...commonProps} position={position} fillOpacity={0.5}>
-            {text}
-            <meshBasicMaterial color="#ff00ff" transparent opacity={0.4} toneMapped={false} />
-          </Text>
-        </>
-      )}
+  // 2. On pré-calcule la position de chaque lettre
+  let currentX = 0;
+  const letters = text.split('').map((char) => {
+    const width = getCharWidth(char);
+    // La position de la lettre est le point actuel + la moitié de sa largeur (pour centrer)
+    const pos = currentX + (width / 2);
+    // On avance le curseur pour la prochaine lettre
+    currentX += width;
+    
+    return { char, pos, width };
+  });
 
-      {/* TEXTE PRINCIPAL */}
-      <Text 
-        ref={mainRef}
-        {...commonProps} 
-        position={position}
-        // Si c'est le titre principal, on garde le contour blanc
-        fillOpacity={1}
-        strokeWidth={isNeon ? 0 : 0.04}
-        strokeColor={isNeon ? "transparent" : "white"}
-      >
-        {text}
-        {isNeon ? (
-          <meshStandardMaterial 
-            color={color} 
-            emissive={hovered ? "#ffffff" : "#4f46e5"} // Flash blanc au survol
-            emissiveIntensity={hovered ? 2 : 1}
-            toneMapped={false} 
-          />
-        ) : (
-          <meshStandardMaterial color={hovered ? "#ddd" : "white"} toneMapped={false} />
-        )}
-      </Text>
+  const totalWidth = currentX;
+  // On centre le tout par rapport à la position demandée
+  const startX = position[0] - (totalWidth / 2);
+
+  return (
+    <group position={[0, position[1], position[2]]}>
+      {letters.map((item, i) => (
+        <InteractiveLetter
+          key={i}
+          char={item.char}
+          // On place la lettre à sa position précise calculée
+          position={[startX + item.pos, 0, 0]}
+          fontSize={fontSize}
+          baseColor={color}
+          isNeon={isNeon}
+        />
+      ))}
     </group>
   );
 };
 
-// --- 3D ELEMENT (RESPONSIVE + GLITCH) ---
+// --- SCÈNE 3D ---
 function HeroText() {
   const groupRef = useRef();
   const { viewport } = useThree();
 
+  // Responsive Scale
   const targetWidth = 12; 
   const scaleFactor = viewport.width < targetWidth ? viewport.width / targetWidth : 1;
 
@@ -163,23 +200,21 @@ function HeroText() {
 
   return (
     <group ref={groupRef} scale={scaleFactor}>
-      {/* Utilisation du nouveau composant GlitchText */}
+      {/* On utilise SplitWord au lieu de Text direct */}
       
-      {/* LIGNE 1 : PORTFOLIO */}
-      <GlitchText 
+      <SplitWord 
         text="PORTFOLIO" 
         position={[0, 0.6, 0]} 
-        fontSize={0.9} 
+        fontSize={1} 
         color="white" 
         isNeon={false} 
       />
       
-      {/* LIGNE 2 : TON NOM (Neon) */}
-      <GlitchText 
+      <SplitWord 
         text="LEO BRIMACOMBE" 
         position={[0, -0.8, 0]} 
-        fontSize={0.9} 
-        color="rgb(68, 127, 255)" 
+        fontSize={1} // Un peu plus petit car le nom est long
+        color="rgb(37 99 235 / var(--tw-bg-opacity, 1))" 
         isNeon={true} 
       />
     </group>
@@ -239,12 +274,10 @@ export default function App() {
       <div 
         style={{ 
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', 
-          zIndex: 0, pointerEvents: 'none' // Le pointerEvents est géré par les objets 3D s'ils sont interactifs
+          zIndex: 0, pointerEvents: 'none'
         }}
       >
-        {/* On doit activer les events 'pointerEvents: auto' sur le Canvas pour que le hover marche, 
-            MAIS seulement sur le Canvas, pas la div container qui est zIndex 0.
-            Astuce : On laisse le Canvas gérer les events. */}
+        {/* PointerEvents 'auto' essentiel pour détecter la souris */}
         <Canvas camera={{ position: [0, 0, 7], fov: 50 }} style={{ pointerEvents: 'auto' }}>
             <ambientLight intensity={2} />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={5} />
@@ -257,7 +290,6 @@ export default function App() {
       {/* 2. LAYER CONTENU */}
       <main className="relative z-10 w-full flex flex-col min-h-screen pointer-events-none">
         
-        {/* Navbar (On remet pointer-events-auto sur les éléments cliquables) */}
         <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-40 mix-blend-difference text-white">
             <span className="font-sync font-bold text-sm md:text-lg pointer-events-auto cursor-pointer">Léo Brimacombe</span>
             <div className="flex gap-6 font-mono text-xs hidden md:flex pointer-events-auto">
@@ -271,7 +303,6 @@ export default function App() {
              <div className="text-center text-xs font-mono text-gray-500 animate-pulse">( DESCENDEZ )</div>
         </section>
 
-        {/* CONTENEUR PRINCIPAL (Pointer events auto pour pouvoir scroller et cliquer) */}
         <div className="bg-[#050505] w-full relative z-20 shadow-[0_-50px_100px_rgba(5,5,5,1)] pointer-events-auto">
             
             <div className="bg-blue-600 text-black py-2 overflow-hidden w-full">
@@ -375,7 +406,7 @@ export default function App() {
                 <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 md:gap-8 my-8 md:my-12">
                     <motion.a 
                         href="mailto:leo.brimacombe@free.fr" 
-                        className="text-[9vw] md:text-[2vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none"
+                        className="text-[9vw] md:text-[3vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none"
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
@@ -386,7 +417,7 @@ export default function App() {
 
                     <motion.a 
                         href="tel:+33768785238"
-                        className="text-xl md:text-2xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300"
+                        className="text-xl md:text-3xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300"
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
