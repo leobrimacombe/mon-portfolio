@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // AJOUT DE AnimatePresence
 import * as THREE from 'three';
 
 // --- DONNÉES ---
@@ -46,27 +46,20 @@ const PROJECTS_DATA = [
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE (AVEC CHARGEMENT SYNCHRONISÉ) ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE (IDENTIQUE) ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
   const { viewport } = useThree();
-  
-  // NOUVEAU : On ajoute un état pour savoir si la lettre est prête à être affichée
   const [loaded, setLoaded] = useState(false);
-  
   const worldPos = useMemo(() => new THREE.Vector3(), []);
   
   const animation = useMemo(() => ({
-    // Distance de départ
     startZ: 0 - Math.random() * 20, 
-    // Vitesse (Rapide)
     speed: 8 + Math.random() * 5,
-    // Petit délai supplémentaire pour décaler les lettres
     delay: Math.random() * 0.2 
   }), []);
 
-  // On force la position initiale au montage
   useEffect(() => {
     if (meshRef.current) {
         meshRef.current.position.z = animation.startZ;
@@ -76,47 +69,26 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
 
   useFrame((state, delta) => {
     if (meshRef.current && materialRef.current) {
-      
-      // --- LOGIQUE DE BLOCAGE ---
-      // Si la lettre n'est pas chargée ("synced"), on la force à rester au fond.
-      // L'animation ne commencera VRAIMENT que quand 'loaded' sera true.
       if (!loaded) {
           meshRef.current.position.z = animation.startZ;
           meshRef.current.scale.set(0, 0, 0);
-          return; // On arrête là pour cette frame
+          return;
       }
-
-      // --- 1. CALCULS SOURIS (Reste inchangé) ---
       const mouseX = (state.pointer.x * viewport.width) / 2;
       const mouseY = (state.pointer.y * viewport.height) / 2;
-
       meshRef.current.getWorldPosition(worldPos);
       const dx = mouseX - worldPos.x;
       const dy = mouseY - worldPos.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-
       const maxDist = 1.5;
       const influence = Math.max(0, 1 - distance / maxDist);
-
-      // --- 2. CIBLES ---
-      // Maintenant que c'est chargé, la cible Z est 0 (ou répulsion souris)
       const targetZ = position[2] - influence * 0.5;
       const targetScale = 1;
 
-      // --- 3. ANIMATION (Damp) ---
-      // C'est ici que le mouvement se lance, seulement maintenant !
-      meshRef.current.position.z = THREE.MathUtils.damp(
-        meshRef.current.position.z, 
-        targetZ, 
-        animation.speed, 
-        delta
-      );
-
+      meshRef.current.position.z = THREE.MathUtils.damp(meshRef.current.position.z, targetZ, animation.speed, delta);
       const currentScale = meshRef.current.scale.x;
       const newScale = THREE.MathUtils.damp(currentScale, targetScale, animation.speed, delta);
       meshRef.current.scale.set(newScale, newScale, newScale);
-
-      // --- 4. EFFETS VISUELS ---
       materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, influence * 0.6, 0.1);
       materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, influence * 5, 0.1);
 
@@ -130,92 +102,42 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   });
 
   return (
-    <Text
-      ref={meshRef}
-      font="/Michroma-Regular.ttf"
-      fontSize={fontSize}
-      position={position}
-      anchorX="center"
-      anchorY="middle"
-      // C'EST LA CLÉ DU SUCCÈS 👇
-      // Cette fonction est appelée par Three.js quand la lettre est 100% prête.
-      onSync={() => setLoaded(true)}
-    >
+    <Text ref={meshRef} font="/Michroma-Regular.ttf" fontSize={fontSize} position={position} anchorX="center" anchorY="middle" onSync={() => setLoaded(true)}>
       {char}
-      <MeshDistortMaterial
-        ref={materialRef}
-        color={baseColor}
-        speed={0}
-        distort={0}
-        toneMapped={false}
-        emissive={isNeon ? baseColor : "black"}
-        emissiveIntensity={isNeon ? 2 : 0}
-      />
+      <MeshDistortMaterial ref={materialRef} color={baseColor} speed={0} distort={0} toneMapped={false} emissive={isNeon ? baseColor : "black"} emissiveIntensity={isNeon ? 2 : 0} />
     </Text>
   );
 };
 
-// --- CONTENEUR DE MOTS (KERNING CORRIGÉ) ---
+// --- CONTENEUR DE MOTS (IDENTIQUE) ---
 const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
-  
-  // 1. On définit la largeur spécifique pour les lettres "fines" de Michroma
-  // Michroma est une police large, donc le défaut est grand (0.9), 
-  // mais on réduit drastiquement pour I, L, T, F, etc.
   const getCharWidth = (char) => {
-    const widthMap = {
-      'I': 0.3,
-      'i': 0.3,
-      'L': 0.7,
-      'l': 0.6,
-      'T': 0.8,
-      'F': 0.8,
-      ' ': 0.3, // Espace
-      'M': 1.2, // M un peu plus large
-      'W': 1.1  // W un peu plus large
-    };
-    // Si la lettre n'est pas dans la liste, on utilise 0.95 par défaut
+    const widthMap = { 'I': 0.3, 'i': 0.3, 'L': 0.7, 'l': 0.6, 'T': 0.8, 'F': 0.8, ' ': 0.3, 'M': 1.2, 'W': 1.1 };
     return (widthMap[char] ?? 0.95) * fontSize;
   };
-
-  // 2. On pré-calcule la position de chaque lettre
   let currentX = 0;
   const letters = text.split('').map((char) => {
     const width = getCharWidth(char);
-    // La position de la lettre est le point actuel + la moitié de sa largeur (pour centrer)
     const pos = currentX + (width / 2);
-    // On avance le curseur pour la prochaine lettre
     currentX += width;
-    
     return { char, pos, width };
   });
-
   const totalWidth = currentX;
-  // On centre le tout par rapport à la position demandée
   const startX = position[0] - (totalWidth / 2);
 
   return (
     <group position={[0, position[1], position[2]]}>
       {letters.map((item, i) => (
-        <InteractiveLetter
-          key={i}
-          char={item.char}
-          // On place la lettre à sa position précise calculée
-          position={[startX + item.pos, 0, 0]}
-          fontSize={fontSize}
-          baseColor={color}
-          isNeon={isNeon}
-        />
+        <InteractiveLetter key={i} char={item.char} position={[startX + item.pos, 0, 0]} fontSize={fontSize} baseColor={color} isNeon={isNeon} />
       ))}
     </group>
   );
 };
 
-// --- SCÈNE 3D ---
+// --- SCÈNE 3D (IDENTIQUE) ---
 function HeroText() {
   const groupRef = useRef();
   const { viewport } = useThree();
-
-  // Responsive Scale
   const targetWidth = 12; 
   const scaleFactor = viewport.width < targetWidth ? viewport.width / targetWidth : 1;
 
@@ -232,37 +154,31 @@ function HeroText() {
 
   return (
     <group ref={groupRef} scale={scaleFactor}>
-      {}
-      
-      <SplitWord 
-        text="PORTFOLIO" 
-        position={[0, 0.6, 0]} 
-        fontSize={1} 
-        color="white" 
-        isNeon={false} 
-      />
-      
-      <SplitWord 
-        text="LEO BRIMACOMBE" 
-        position={[0, -0.8, 0]} 
-        fontSize={0.9}
-        color="rgb(0, 76, 241)" 
-        isNeon={true} 
-      />
+      <SplitWord text="PORTFOLIO" position={[0, 0.6, 0]} fontSize={1} color="white" isNeon={false} />
+      <SplitWord text="LEO BRIMACOMBE" position={[0, -0.8, 0]} fontSize={0.9} color="rgb(0, 76, 241)" isNeon={true} />
     </group>
   );
 }
 
-// --- MODALE ---
+// --- MODALE MODIFIÉE POUR ANIMATION LAYOUT ---
 const ProjectModal = ({ project, onClose }) => {
   return (
-    <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm"
-      style={{ pointerEvents: 'auto' }}
-      onClick={onClose}
-    >
-      <div 
-        className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl"
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
+      
+      {/* 1. FOND NOIR (Fade In/Out simple) */}
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/95 backdrop-blur-sm"
+      />
+
+      {/* 2. CARTE QUI S'AGRANDIT (Shared Layout Animation) */}
+      {/* layoutId correspond à celui de l'élément cliqué dans la liste */}
+      <motion.div 
+        layoutId={`project-${project.id}`} 
+        className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl z-10"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
@@ -271,17 +187,41 @@ const ProjectModal = ({ project, onClose }) => {
         >
           ✕
         </button>
+        
+        {/* L'image */}
         <div className="w-full h-[40%] md:w-1/2 md:h-full relative bg-gray-900">
-            <img src={project.image} className="w-full h-full object-cover opacity-80" alt={project.title} />
+            <motion.img 
+                src={project.image} 
+                className="w-full h-full object-cover opacity-80" 
+                alt={project.title} 
+            />
         </div>
+
+        {/* Le contenu textuel */}
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-white overflow-y-auto">
-           <h2 className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</h2>
-           <p className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</p>
-           <a href={project.link} target="_blank" rel="noreferrer" className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer">
+           {/* layout="position" permet au texte de glisser doucement */}
+           <motion.h2 layout="position" className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</motion.h2>
+           
+           <motion.p 
+             initial={{ opacity: 0, y: 10 }} 
+             animate={{ opacity: 1, y: 0 }} 
+             transition={{ delay: 0.2 }}
+             className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed"
+           >
+             {project.description}
+           </motion.p>
+           
+           <motion.a 
+             initial={{ opacity: 0, y: 10 }} 
+             animate={{ opacity: 1, y: 0 }} 
+             transition={{ delay: 0.3 }}
+             href={project.link} target="_blank" rel="noreferrer" 
+             className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer"
+           >
              Voir le projet
-           </a>
+           </motion.a>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -303,13 +243,7 @@ export default function App() {
     <div className="relative w-full min-h-screen overflow-x-hidden">
       
       {/* 1. LAYER 3D */}
-      <div 
-        style={{ 
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', 
-          zIndex: 0, pointerEvents: 'none'
-        }}
-      >
-        {/* PointerEvents 'auto' essentiel pour détecter la souris */}
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas camera={{ position: [0, 0, 7], fov: 50 }} style={{ pointerEvents: 'auto' }}>
             <ambientLight intensity={2} />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={5} />
@@ -339,12 +273,8 @@ export default function App() {
             
             <div className="bg-blue-600 text-black py-2 overflow-hidden w-full">
                 <div className="flex animate-marquee whitespace-nowrap">
-                    <span className="text-2xl md:text-4xl font-black font-sync mx-4">
-                        {MARQUEE_TEXT.repeat(6)}
-                    </span>
-                    <span className="text-2xl md:text-4xl font-black font-sync mx-4">
-                        {MARQUEE_TEXT.repeat(6)}
-                    </span>
+                    <span className="text-2xl md:text-4xl font-black font-sync mx-4">{MARQUEE_TEXT.repeat(6)}</span>
+                    <span className="text-2xl md:text-4xl font-black font-sync mx-4">{MARQUEE_TEXT.repeat(6)}</span>
                 </div>
             </div>
 
@@ -352,39 +282,19 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
                     <div>
                         <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-8 uppercase">A Propos</h2>
-                        <motion.h3 
-                            initial={{ opacity: 0, y: 20 }} 
-                            whileInView={{ opacity: 1, y: 0 }} 
-                            viewport={{ once: true }} 
-                            className="text-2xl md:text-5xl font-bold font-sync leading-tight text-white"
-                        >
+                        <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-2xl md:text-5xl font-bold font-sync leading-tight text-white">
                             JE CRÉE DES <span className="text-blue-600">EXPÉRIENCES</span> NUMÉRIQUES IMMERSIVES.
                         </motion.h3>
                     </div>
-
                     <div className="flex flex-col justify-end">
-                        <motion.p 
-                            initial={{ opacity: 0, y: 20 }} 
-                            whileInView={{ opacity: 1, y: 0 }} 
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.2 }}
-                            className="text-gray-400 text-base md:text-lg mb-8 leading-relaxed"
-                        >
+                        <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="text-gray-400 text-base md:text-lg mb-8 leading-relaxed">
                             Développeur créatif passionné par l'intersection entre le design et la technologie. 
                             Mon objectif est de transformer une simple navigation en une véritable exploration visuelle, 
                             en utilisant les dernières technologies du web moderne.
                         </motion.p>
-                        
                         <div className="flex flex-wrap gap-2 md:gap-3">
                             {["React", "JS", "Tailwind", "Next.js", "Laravel", "Symfony"].map((skill, index) => (
-                                <motion.span 
-                                    key={index}
-                                    initial={{ opacity: 0, scale: 0.8 }} 
-                                    whileInView={{ opacity: 1, scale: 1 }} 
-                                    viewport={{ once: true }}
-                                    transition={{ delay: 0.3 + (index * 0.1) }}
-                                    className="px-3 py-1 md:px-4 md:py-2 border border-white/20 rounded-full text-[10px] md:text-xs font-mono text-gray-300 hover:bg-white hover:text-black transition-colors duration-300 cursor-default"
-                                >
+                                <motion.span key={index} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 + (index * 0.1) }} className="px-3 py-1 md:px-4 md:py-2 border border-white/20 rounded-full text-[10px] md:text-xs font-mono text-gray-300 hover:bg-white hover:text-black transition-colors duration-300 cursor-default">
                                     {skill}
                                 </motion.span>
                             ))}
@@ -393,14 +303,17 @@ export default function App() {
                 </div>
             </section>
 
+            {/* SECTION TRAVAUX (MODIFIÉE AVEC LAYOUT ID) */}
             <section id="work" className="py-20 md:py-24 px-6 max-w-7xl mx-auto border-b border-white/10">
                 <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-12 uppercase">mes travaux</h2>
                 <div className="flex flex-col gap-2">
                     {PROJECTS_DATA.map((p, i) => (
                       <motion.div 
+                        // C'EST ICI LA MAGIE : layoutId connecte la liste à la modale
+                        layoutId={`project-${p.id}`}
                         key={p.id}
                         onClick={() => setSelectedProject(p)} 
-                        className="group border-t border-white/10 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-white/5 px-2 md:px-4 transition-all w-full gap-4 md:gap-0"
+                        className="group border-t border-white/10 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-white/5 px-2 md:px-4 transition-colors w-full gap-4 md:gap-0"
                         initial={{ opacity: 0, y: 20 }} 
                         whileInView={{ opacity: 1, y: 0 }} 
                         viewport={{ once: true }} 
@@ -408,7 +321,10 @@ export default function App() {
                       >
                         <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
                             <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
-                            <h3 className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">{p.title}</h3>
+                            {/* layout="position" permet au texte de bouger naturellement */}
+                            <motion.h3 layout="position" className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">
+                                {p.title}
+                            </motion.h3>
                         </div>
                         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
                             <span className="text-gray-500 font-mono text-[10px] md:text-xs">{p.category}</span>
@@ -420,49 +336,18 @@ export default function App() {
             </section>
 
             <footer id="contact" className="py-20 md:py-32 px-6 bg-blue-600 text-white min-h-[50vh] md:min-h-[70vh] flex flex-col justify-between">
-                
                 <div className="max-w-7xl mx-auto w-full">
                     <h2 className="text-xs font-bold text-blue-900 tracking-[0.5em] mb-8 md:mb-12 uppercase">Contact</h2>
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <h3 className="text-3xl md:text-6xl font-black font-sync mb-8 leading-tight">
-                            UN PROJET EN TÊTE ?<br />
-                            <span className="text-blue-950">TRAVAILLONS ENSEMBLE.</span>
-                        </h3>
+                    <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                        <h3 className="text-3xl md:text-6xl font-black font-sync mb-8 leading-tight">UN PROJET EN TÊTE ?<br /><span className="text-blue-950">TRAVAILLONS ENSEMBLE.</span></h3>
                     </motion.div>
                 </div>
-
                 <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 md:gap-8 my-8 md:my-12">
-                    <motion.a 
-                        href="mailto:leo.brimacombe@free.fr" 
-                        className="text-[9vw] md:text-[3vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none"
-                        initial={{ opacity: 0, x: -50 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        whileHover={{ x: 20 }}
-                    >
-                        leo.brimacombe@free.fr
-                    </motion.a>
-
-                    <motion.a 
-                        href="tel:+33768785238"
-                        className="text-xl md:text-3xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        +33 7 68 78 52 38
-                    </motion.a>
+                    <motion.a href="mailto:leo.brimacombe@free.fr" className="text-[9vw] md:text-[3vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none" initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} whileHover={{ x: 20 }}>leo.brimacombe@free.fr</motion.a>
+                    <motion.a href="tel:+33768785238" className="text-xl md:text-3xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>+33 7 68 78 52 38</motion.a>
                 </div>
-
                 <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-start md:items-end border-t border-white/20 pt-8 gap-6 md:gap-4">
-                    <div className="font-mono text-xs opacity-70">
-                        © 2026 LÉO BRIMACOMBE.<br/>TOUS DROITS RÉSERVÉS.
-                    </div>
+                    <div className="font-mono text-xs opacity-70">© 2026 LÉO BRIMACOMBE.<br/>TOUS DROITS RÉSERVÉS.</div>
                     <div className="flex flex-wrap gap-4 md:gap-6 font-mono text-xs md:text-sm font-bold">
                         <a href="https://www.linkedin.com/in/l%C3%A9o-brimacombe-23a6112a3/" target="_blank" rel="noreferrer" className="hover:text-blue-950 transition-colors">LINKEDIN</a>
                         <a href="https://github.com/leobrimacombe" target="_blank" rel="noreferrer" className="hover:text-blue-950 transition-colors">GITHUB</a>
@@ -473,9 +358,12 @@ export default function App() {
         </div>
       </main>
 
-      {selectedProject && (
-        <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
-      )}
+      {/* AJOUT DE ANMATE PRESENCE POUR LA SORTIE FLUIDE */}
+      <AnimatePresence>
+        {selectedProject && (
+          <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
+        )}
+      </AnimatePresence>
       
       <div className="fixed top-0 left-0 w-full h-screen pointer-events-none z-50 opacity-[0.05]" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noiseFilter\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.65\" numOctaves=\"3\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noiseFilter)\"/%3E%3C/svg%3E')"}}></div>
     </div>
