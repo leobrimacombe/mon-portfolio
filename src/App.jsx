@@ -46,57 +46,86 @@ const PROJECTS_DATA = [
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE INTELLIGENTE ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE (AVEC CHARGEMENT SYNCHRONISÉ) ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
   const { viewport } = useThree();
   
-  // Vecteur pour stocker la position mondiale de la lettre
+  // NOUVEAU : On ajoute un état pour savoir si la lettre est prête à être affichée
+  const [loaded, setLoaded] = useState(false);
+  
   const worldPos = useMemo(() => new THREE.Vector3(), []);
+  
+  const animation = useMemo(() => ({
+    // Distance de départ
+    startZ: -3 - Math.random() * 20, 
+    // Vitesse (Rapide)
+    speed: 5 + Math.random() * 5,
+    // Petit délai supplémentaire pour décaler les lettres
+    delay: Math.random() * 0.2 
+  }), []);
 
-  useFrame((state) => {
+  // On force la position initiale au montage
+  useEffect(() => {
+    if (meshRef.current) {
+        meshRef.current.position.z = animation.startZ;
+        meshRef.current.scale.set(0, 0, 0);
+    }
+  }, [animation.startZ]);
+
+  useFrame((state, delta) => {
     if (meshRef.current && materialRef.current) {
-      // 1. Où est la souris en 3D ?
+      
+      // --- LOGIQUE DE BLOCAGE ---
+      // Si la lettre n'est pas chargée ("synced"), on la force à rester au fond.
+      // L'animation ne commencera VRAIMENT que quand 'loaded' sera true.
+      if (!loaded) {
+          meshRef.current.position.z = animation.startZ;
+          meshRef.current.scale.set(0, 0, 0);
+          return; // On arrête là pour cette frame
+      }
+
+      // --- 1. CALCULS SOURIS (Reste inchangé) ---
       const mouseX = (state.pointer.x * viewport.width) / 2;
       const mouseY = (state.pointer.y * viewport.height) / 2;
 
-      // 2. Où est cette lettre précise dans le monde ?
       meshRef.current.getWorldPosition(worldPos);
-
-      // 3. Calcul de la distance entre la souris et la lettre
       const dx = mouseX - worldPos.x;
       const dy = mouseY - worldPos.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // 4. Seuil d'activation (Rayon d'action de 1.5 unités)
-      // Plus la souris est proche, plus "influence" est grand (de 0 à 1)
       const maxDist = 1.5;
       const influence = Math.max(0, 1 - distance / maxDist);
 
-      // 5. APPLICATION DES EFFETS BASÉS SUR LA PROXIMITÉ
-      
-      // A. Déformation (Distortion)
-      // On vise 0.5 de distortion max quand la souris est dessus
+      // --- 2. CIBLES ---
+      // Maintenant que c'est chargé, la cible Z est 0 (ou répulsion souris)
+      const targetZ = position[2] - influence * 0.5;
+      const targetScale = 1;
+
+      // --- 3. ANIMATION (Damp) ---
+      // C'est ici que le mouvement se lance, seulement maintenant !
+      meshRef.current.position.z = THREE.MathUtils.damp(
+        meshRef.current.position.z, 
+        targetZ, 
+        animation.speed, 
+        delta
+      );
+
+      const currentScale = meshRef.current.scale.x;
+      const newScale = THREE.MathUtils.damp(currentScale, targetScale, animation.speed, delta);
+      meshRef.current.scale.set(newScale, newScale, newScale);
+
+      // --- 4. EFFETS VISUELS ---
       materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, influence * 0.6, 0.1);
-      
-      // B. Vitesse de l'eau (Speed)
-      // Ça s'agite plus vite quand on est proche
       materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, influence * 5, 0.1);
 
-      // C. Couleur (Glow)
-      // Si c'est Neon, on booste l'intensité. Sinon on passe du blanc au bleu.
       if (isNeon) {
          materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(2, 2 + influence * 5, 0.1);
       } else {
-         // Changement subtil de couleur pour le texte blanc (vers le gris/bleuté)
          const targetColor = influence > 0.2 ? new THREE.Color("#a5b4fc") : new THREE.Color("white");
          materialRef.current.color.lerp(targetColor, 0.1);
       }
-
-      // D. Petit mouvement de recul (Repulsion Z)
-      // La lettre recule légèrement quand on la touche
-      meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, position[2] - influence * 0.5, 0.1);
     }
   });
 
@@ -108,13 +137,16 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
       position={position}
       anchorX="center"
       anchorY="middle"
+      // C'EST LA CLÉ DU SUCCÈS 👇
+      // Cette fonction est appelée par Three.js quand la lettre est 100% prête.
+      onSync={() => setLoaded(true)}
     >
       {char}
       <MeshDistortMaterial
         ref={materialRef}
         color={baseColor}
-        speed={0} // Au repos, ça ne bouge pas
-        distort={0} // Au repos, pas de déformation
+        speed={0}
+        distort={0}
         toneMapped={false}
         emissive={isNeon ? baseColor : "black"}
         emissiveIntensity={isNeon ? 2 : 0}
@@ -200,7 +232,7 @@ function HeroText() {
 
   return (
     <group ref={groupRef} scale={scaleFactor}>
-      {/* On utilise SplitWord au lieu de Text direct */}
+      {}
       
       <SplitWord 
         text="PORTFOLIO" 
@@ -213,7 +245,7 @@ function HeroText() {
       <SplitWord 
         text="LEO BRIMACOMBE" 
         position={[0, -0.8, 0]} 
-        fontSize={0.9} // Un peu plus petit car le nom est long
+        fontSize={0.9}
         color="rgb(0, 76, 241)" 
         isNeon={true} 
       />
