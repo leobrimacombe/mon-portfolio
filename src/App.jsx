@@ -213,7 +213,7 @@ function HeroText() {
       <SplitWord 
         text="LEO BRIMACOMBE" 
         position={[0, -0.8, 0]} 
-        fontSize={1} // Un peu plus petit car le nom est long
+        fontSize={0.9} // Un peu plus petit car le nom est long
         color="rgb(0, 76, 241)" 
         isNeon={true} 
       />
