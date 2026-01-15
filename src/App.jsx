@@ -92,7 +92,7 @@ function HeroText() {
       {/* LIGNE 2 */}
       <Text
         font="/Michroma-Regular.ttf"
-        fontSize={1}
+        fontSize={0.9}
         letterSpacing={-0.05}
         anchorX="center"
         anchorY="middle"
@@ -303,7 +303,7 @@ export default function App() {
                     <motion.a 
                         href="mailto:leo.brimacombe@free.fr" 
                         // Taille ajustée pour éviter la casse sur petit écran
-                        className="text-[9vw] md:text-[3vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none"
+                        className="text-[9vw] md:text-[2vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none"
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
@@ -314,7 +314,7 @@ export default function App() {
 
                     <motion.a 
                         href="tel:+33768785238"
-                        className="text-xl md:text-3xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300"
+                        className="text-xl md:text-2xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300"
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
