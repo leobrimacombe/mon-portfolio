@@ -214,7 +214,7 @@ function HeroText() {
         text="LEO BRIMACOMBE" 
         position={[0, -0.8, 0]} 
         fontSize={1} // Un peu plus petit car le nom est long
-        color="rgb(37 99 235 / var(--tw-bg-opacity, 1))" 
+        color="rgb(0, 76, 241)" 
         isNeon={true} 
       />
     </group>
