@@ -293,7 +293,7 @@ export default function App() {
                     </div>
                     <div className="flex flex-col justify-end">
                         <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="text-gray-400 text-base md:text-lg mb-8 leading-relaxed">
-                            Développeur créatif passionné par l'intersection entre le design et la technologie. 
+                            Développeur créatif passionné par le design et la technologie. 
                             Mon objectif est de transformer une simple navigation en une véritable exploration visuelle, 
                             en utilisant les dernières technologies du web moderne.
                         </motion.p>
