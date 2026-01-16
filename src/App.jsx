@@ -182,7 +182,7 @@ const ProjectModal = ({ project, onClose }) => {
 
 export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
-  const [isMenuOpen, setMenuOpen] = useState(false); // ÉTAT DU MENU MOBILE
+  const [isMenuOpen, setMenuOpen] = useState(false); // etat menu mobile
 
   useEffect(() => {
     if (selectedProject || isMenuOpen) {
@@ -216,14 +216,14 @@ export default function App() {
             
             <span className="font-sync font-bold text-sm md:text-lg pointer-events-auto cursor-pointer z-50 mix-blend-difference">Léo Brimacombe</span>
             
-            {/* MENU PC (Invisible sur Mobile) */}
+            {/* MENU PC Invisible sur Mobile */}
             <div className="hidden md:flex gap-6 font-mono text-xs pointer-events-auto mix-blend-difference">
                 <a href="#about" className="hover:text-blue-400 cursor-pointer transition-colors">A PROPOS</a>
                 <a href="#work" className="hover:text-blue-400 cursor-pointer transition-colors">MON TRAVAIL</a>
                 <a href="#contact" className="hover:text-blue-400 cursor-pointer transition-colors">CONTACT</a>
             </div>
 
-            {/* BOUTON BURGER (Visible uniquement sur Mobile) */}
+            {/* BOUTON BURGER Visible uniquement sur Mobile */}
             <button 
                 onClick={() => setMenuOpen(!isMenuOpen)}
                 className="md:hidden pointer-events-auto z-50 font-mono text-xs border border-white/50 px-4 py-2 rounded-full backdrop-blur-md bg-black/20 text-white"
