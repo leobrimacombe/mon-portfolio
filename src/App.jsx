@@ -44,7 +44,7 @@ const PROJECTS_DATA = [
   }
 ];
 
-const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • ";
+const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
 
 // --- COMPOSANT : LETTRE INDIVIDUELLE ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
@@ -298,7 +298,7 @@ export default function App() {
                             en utilisant les dernières technologies du web moderne.
                         </motion.p>
                         <div className="flex flex-wrap gap-2 md:gap-3">
-                            {["React", "JS", "Tailwind", "Next.js", "Laravel", "Symfony"].map((skill, index) => (
+                            {["HTML", "CSS", "JS", "React", "Tailwind", "Next.js", "Laravel", "Symfony"].map((skill, index) => (
                                 <motion.span key={index} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 + (index * 0.1) }} className="px-3 py-1 md:px-4 md:py-2 border border-white/20 rounded-full text-[10px] md:text-xs font-mono text-gray-300 hover:bg-white hover:text-black transition-colors duration-300 cursor-default">
                                     {skill}
                                 </motion.span>
