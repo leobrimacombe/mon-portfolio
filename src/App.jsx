@@ -4,7 +4,7 @@ import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 
-// --- DONNÉES (AVEC TAGS TECHNO AJOUTÉS) ---
+// --- DONNÉES (AVEC LIENS GIT AJOUTÉS) ---
 const PROJECTS_DATA = [
   { 
     id: 1, 
@@ -12,12 +12,10 @@ const PROJECTS_DATA = [
     category: "Création Site Web", 
     year: "2025", 
     description: "Création complète et design du site vitrine esprits-conscients.fr.\nIdentité visuelle et intégration web.", 
-    // 👇 NOUVEAU : Liste des technos
     tags: ["WordPress", "CSS Grids", "JavaScript", "Figma", "SEO"],
-    images: [
-        "/images/logo esprit conscients.webp",
-    ], 
-    link: "https://esprits-conscients.fr/esprits-conscients/" 
+    images: ["/images/logo esprit conscients.webp"], 
+    link: "https://esprits-conscients.fr/esprits-conscients/",
+    // 👇 Pas de gitLink ici (exemple projet privé ou CMS)
   },
   { 
     id: 2, 
@@ -26,10 +24,9 @@ const PROJECTS_DATA = [
     year: "2025", 
     description: "Modernisation technique, optimisation et mise à jour du contenu pour cette institution.", 
     tags: ["HTML5", "SASS", "JS Vanilla", "Optimisation", "Accessibilité"],
-    images: [
-        "/images/logo l3pc.webp",
-    ], 
-    link: "https://les3ptiscochons.fr/" 
+    images: ["/images/logo l3pc.webp"], 
+    link: "https://les3ptiscochons.fr/",
+    // 👇 Pas de gitLink
   },
   { 
     id: 3, 
@@ -38,10 +35,9 @@ const PROJECTS_DATA = [
     year: "2025", 
     description: "Mise à jour structurelle et maintenance du site e-commerce spécialisé.", 
     tags: ["PrestaShop", "PHP", "Smarty", "MySQL", "E-commerce"],
-    images: [
-        "/images/logo beaba.webp",
-    ], 
-    link: "https://beaba-biere.fr/" 
+    images: ["/images/logo beaba.webp"], 
+    link: "https://beaba-biere.fr/",
+    // 👇 Pas de gitLink
   },
   { 
     id: 4, 
@@ -50,26 +46,44 @@ const PROJECTS_DATA = [
     year: "2025", 
     description: "Développement d'une application de gestion de projet style Trello.\nFonctionnalités Drag & Drop, colonnes dynamiques et persistance des données.\n(Site inaccessible car nécessitant une connection vpn)", 
     tags: ["Laravel", "React.js", "Tailwind", "Inertia", "DnD Kit", "MySQL"],
-    images: [
-        "/images/image sae501.png",
-        "/images/login sae501.png",
-    ], 
-    link: "https://sae501.brimacombe.etu.mmi-unistra.fr/" 
-  }
+    images: ["/images/image sae501.png", "/images/login sae501.png"], 
+    link: "https://sae501.brimacombe.etu.mmi-unistra.fr/",
+    gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501"
+  },
+  { 
+    id: 5, 
+    title: "JEU DE CARTE", 
+    category: "Jeu JS", 
+    year: "2025", 
+    description: "Développement d'un jeu de cartes permettant d'apprendre les cycle de l'eau.", 
+    tags: ["HTML", "CSS", "React.js", "Tailwind", "SQL"],
+    images: ["/images/decripteau1.png", "/images/decripteau2.png"], 
+    link: "https://sae401-decrypteau.brimacombe.etu.mmi-unistra.fr/",
+    gitLink: "https://gitlab.unistra.fr/sae401-justine-hannauer-nikita-kuznetsov-leo-brimacombe-romain-lapouge/sae401-justine-hannauer-nikita-kuznetsov-leo-brimacombe-romain-lapouge"
+  },
+  { 
+    id: 6, 
+    title: "JEU UNITY", 
+    category: "Jeu Unity", 
+    year: "2025", 
+    description: "Développement d'un jeu de parcours basé sur la physique sur le moteur de jeu Unity.", 
+    tags: ["Unity", "C#", "Game Design"],
+    images: ["/images/person_runner1.png"], 
+    link: "https://gitlab.unistra.fr/lbrimacombe/sae402",
+    gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae402"
+    }
 ];
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
 
 // --- COMPOSANT : LETTRE INDIVIDUELLE (OPTIMISÉ) ---
-// --- COMPOSANT : LETTRE INDIVIDUELLE (CORRIGÉ & OPTIMISÉ) ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
   const { viewport } = useThree();
   const [loaded, setLoaded] = useState(false);
   const worldPos = useMemo(() => new THREE.Vector3(), []);
-  
-  const maxDistSq = 2.25; // Distance d'activation au carré
+  const maxDistSq = 2.25; 
 
   const animation = useMemo(() => ({
     startZ: 0 - Math.random() * 20, 
@@ -92,59 +106,38 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
           return;
       }
 
-      // --- CALCULS SOURIS ---
       const mouseX = (state.pointer.x * viewport.width) / 2;
       const mouseY = (state.pointer.y * viewport.height) / 2;
-
       meshRef.current.getWorldPosition(worldPos);
-      
       const dx = mouseX - worldPos.x;
       const dy = mouseY - worldPos.y;
-      
       const distSq = dx * dx + dy * dy;
 
-      // --- OPTIMISATION ---
-      // Si la souris est loin, on coupe les calculs lourds...
       if (distSq > maxDistSq) {
-          // ... MAIS on assure l'animation d'entrée (C'est ça qui manquait !) 👇
-          
-          // 1. On ramène le Z à sa place
           meshRef.current.position.z = THREE.MathUtils.damp(meshRef.current.position.z, position[2], animation.speed, delta);
-          
-          // 2. On fait grandir le texte s'il est encore petit (FIX)
           const currentScale = meshRef.current.scale.x;
           if (currentScale < 0.99) {
               const newScale = THREE.MathUtils.damp(currentScale, 1, animation.speed, delta);
               meshRef.current.scale.set(newScale, newScale, newScale);
           }
-
-          // 3. On calme les effets (reset)
           materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, 0, 0.1);
           materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, 0, 0.1);
-          
           if (!isNeon) materialRef.current.color.lerp(new THREE.Color("white"), 0.1);
           if (isNeon) materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(materialRef.current.emissiveIntensity, 2, 0.1);
-          
-          return; // On arrête ici pour économiser des ressources
+          return;
       }
 
-      // --- CALCULS COMPLETS (Si la souris est proche) ---
       const distance = Math.sqrt(distSq);
       const influence = 1 - distance / 1.5;
-
       const targetZ = position[2] - influence * 0.5;
-      
       meshRef.current.position.z = THREE.MathUtils.damp(meshRef.current.position.z, targetZ, animation.speed, delta);
-      
       const currentScale = meshRef.current.scale.x;
       if (currentScale < 0.99) {
           const newScale = THREE.MathUtils.damp(currentScale, 1, animation.speed, delta);
           meshRef.current.scale.set(newScale, newScale, newScale);
       }
-
       materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, influence * 0.6, 0.1);
       materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, influence * 5, 0.1);
-
       if (isNeon) {
          materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(2, 2 + influence * 5, 0.1);
       } else {
@@ -155,26 +148,9 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   });
 
   return (
-    <Text
-      ref={meshRef}
-      font="/Michroma-Regular.ttf"
-      fontSize={fontSize}
-      position={position}
-      anchorX="center"
-      anchorY="middle"
-      sdfGlyphSize={64} // Optimisation qualité/perf
-      onSync={() => setLoaded(true)}
-    >
+    <Text ref={meshRef} font="/Michroma-Regular.ttf" fontSize={fontSize} position={position} anchorX="center" anchorY="middle" sdfGlyphSize={64} onSync={() => setLoaded(true)}>
       {char}
-      <MeshDistortMaterial
-        ref={materialRef}
-        color={baseColor}
-        speed={0}
-        distort={0}
-        toneMapped={false}
-        emissive={isNeon ? baseColor : "black"}
-        emissiveIntensity={isNeon ? 2 : 0}
-      />
+      <MeshDistortMaterial ref={materialRef} color={baseColor} speed={0} distort={0} toneMapped={false} emissive={isNeon ? baseColor : "black"} emissiveIntensity={isNeon ? 2 : 0} />
     </Text>
   );
 };
@@ -230,7 +206,7 @@ function HeroText() {
   );
 }
 
-// --- MODALE PROJET (AVEC TAGS TECHNO) ---
+// --- MODALE PROJET (AVEC BOUTON GIT) ---
 const ProjectModal = ({ project, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setLightboxOpen] = useState(false);
@@ -284,7 +260,6 @@ const ProjectModal = ({ project, onClose }) => {
              <motion.h2 layout="position" className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</motion.h2>
              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</motion.p>
              
-             {/* 👇 NOUVEAU : AFFICHAGE DES TAGS TECHNO */}
              <div className="flex flex-wrap gap-2 mb-8">
                 {project.tags && project.tags.map((tag, i) => (
                     <motion.span 
@@ -299,7 +274,37 @@ const ProjectModal = ({ project, onClose }) => {
                 ))}
              </div>
 
-             <motion.a initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} href={project.link} target="_blank" rel="noreferrer" className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer">Voir le projet</motion.a>
+             {/* 👇 ZONE BOUTONS (LIEN SITE + LIEN GIT) */}
+             <div className="flex flex-wrap gap-4">
+                <motion.a 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    transition={{ delay: 0.3 }} 
+                    href={project.link} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer"
+                >
+                    Voir le projet
+                </motion.a>
+
+                {/* Bouton Git conditionnel */}
+                {project.gitLink && (
+                    <motion.a 
+                        initial={{ opacity: 0, y: 10 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ delay: 0.4 }} 
+                        href={project.gitLink} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="px-6 py-3 border border-white/30 text-white font-bold uppercase w-max text-sm md:text-base hover:bg-white hover:text-black transition rounded cursor-pointer flex items-center gap-2"
+                    >
+                        {/* Icône GitHub simple (SVG) */}
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
+                        Voir le Code
+                    </motion.a>
+                )}
+             </div>
           </div>
         </motion.div>
       </div>
