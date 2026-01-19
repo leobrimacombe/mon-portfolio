@@ -4,7 +4,7 @@ import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 
-// --- DONNÉES (AVEC LIENS GIT AJOUTÉS) ---
+// --- DONNÉES ---
 const PROJECTS_DATA = [
   { 
     id: 1, 
@@ -15,7 +15,6 @@ const PROJECTS_DATA = [
     tags: ["WordPress", "CSS Grids", "JavaScript", "Figma", "SEO"],
     images: ["/images/logo esprit conscients.webp"], 
     link: "https://esprits-conscients.fr/esprits-conscients/",
-    // 👇 Pas de gitLink ici (exemple projet privé ou CMS)
   },
   { 
     id: 2, 
@@ -26,7 +25,6 @@ const PROJECTS_DATA = [
     tags: ["HTML5", "SASS", "JS Vanilla", "Optimisation", "Accessibilité"],
     images: ["/images/logo l3pc.webp"], 
     link: "https://les3ptiscochons.fr/",
-    // 👇 Pas de gitLink
   },
   { 
     id: 3, 
@@ -37,7 +35,6 @@ const PROJECTS_DATA = [
     tags: ["PrestaShop", "PHP", "Smarty", "MySQL", "E-commerce"],
     images: ["/images/logo beaba.webp"], 
     link: "https://beaba-biere.fr/",
-    // 👇 Pas de gitLink
   },
   { 
     id: 4, 
@@ -56,7 +53,7 @@ const PROJECTS_DATA = [
     category: "Jeu JS", 
     year: "2025", 
     description: "Développement d'un jeu de cartes permettant d'apprendre les cycle de l'eau.", 
-    tags: ["HTML", "CSS", "React.js", "Tailwind", "SQL"],
+    tags: ["PHP", "Symfony", "SQL", "JS"],
     images: ["/images/decripteau1.png", "/images/decripteau2.png"], 
     link: "https://sae401-decrypteau.brimacombe.etu.mmi-unistra.fr/",
     gitLink: "https://gitlab.unistra.fr/sae401-justine-hannauer-nikita-kuznetsov-leo-brimacombe-romain-lapouge/sae401-justine-hannauer-nikita-kuznetsov-leo-brimacombe-romain-lapouge"
@@ -67,16 +64,27 @@ const PROJECTS_DATA = [
     category: "Jeu Unity", 
     year: "2025", 
     description: "Développement d'un jeu de parcours basé sur la physique sur le moteur de jeu Unity.", 
-    tags: ["Unity", "C#", "Game Design"],
+    tags: ["Unity", "C#", "Game Design", "Blender"],
     images: ["/images/person_runner1.png"], 
     link: "https://gitlab.unistra.fr/lbrimacombe/sae402",
     gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae402"
+    },
+  { 
+    id: 7, 
+    title: "SITE SUR LE CLIMAT", 
+    category: "Site interactif", 
+    year: "2025", 
+    description: "Développement d'un site en JavaScript permettant de dénoncer les impacts environnementaux de l'aviation et de les comparer aux différents moyens de locomotion.", 
+    tags: ["HTML", "CSS", "JS", "Infographies", "Figma"],
+    images: ["/images/avions.png"], 
+    link: "https://leobrimacombe.github.io/SAE-303/",
+    gitLink: "https://github.com/leobrimacombe/SAE-303"
     }
 ];
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE (OPTIMISÉ) ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
@@ -206,7 +214,7 @@ function HeroText() {
   );
 }
 
-// --- MODALE PROJET (AVEC BOUTON GIT) ---
+// --- MODALE PROJET ---
 const ProjectModal = ({ project, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setLightboxOpen] = useState(false);
@@ -274,7 +282,7 @@ const ProjectModal = ({ project, onClose }) => {
                 ))}
              </div>
 
-             {/* 👇 ZONE BOUTONS (LIEN SITE + LIEN GIT) */}
+             {/* ZONE BOUTONS */}
              <div className="flex flex-wrap gap-4">
                 <motion.a 
                     initial={{ opacity: 0, y: 10 }} 
@@ -411,7 +419,7 @@ export default function App() {
                             en utilisant les dernières technologies du web moderne.
                         </motion.p>
                         <div className="flex flex-wrap gap-2 md:gap-3">
-                            {["HTML", "CSS", "JS", "React", "Tailwind", "Next.js", "Laravel", "Symfony"].map((skill, index) => (
+                            {["HTML", "CSS", "JS", "React", "Tailwind", "Next.js", "Laravel", "Symfony", "Three.js", "Figma", "Photoshop"].map((skill, index) => (
                                 <motion.span key={index} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 + (index * 0.1) }} className="px-3 py-1 md:px-4 md:py-2 border border-white/20 rounded-full text-[10px] md:text-xs font-mono text-gray-300 hover:bg-white hover:text-black transition-colors duration-300 cursor-default">
                                     {skill}
                                 </motion.span>
