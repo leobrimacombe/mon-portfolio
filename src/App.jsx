@@ -4,7 +4,9 @@ import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 
-// --- DONNÉES ---
+// --- DONNÉES (MISES À JOUR AVEC TABLEAUX D'IMAGES) ---
+// J'ai transformé 'image' en 'images' (tableau). 
+// J'ai dupliqué les images pour l'exemple, tu pourras mettre tes vraies images sup.
 const PROJECTS_DATA = [
   { 
     id: 1, 
@@ -12,7 +14,11 @@ const PROJECTS_DATA = [
     category: "Création Site Web", 
     year: "2025", 
     description: "Création complète et design du site vitrine esprits-conscients.fr.\nIdentité visuelle et intégration web.", 
-    image: "/images/logo esprit conscients.webp", 
+    // Tableau d'images pour le carousel
+    images: [
+        "/images/logo esprit conscients.webp",
+        // Ajoute d'autres images ici, ex: "/images/projet1-screen2.webp"
+    ], 
     link: "https://esprits-conscients.fr/esprits-conscients/" 
   },
   { 
@@ -21,7 +27,9 @@ const PROJECTS_DATA = [
     category: "Refonte / Mise à jour", 
     year: "2025", 
     description: "Modernisation technique, optimisation et mise à jour du contenu pour cette institution.", 
-    image: "/images/logo l3pc.webp", 
+    images: [
+        "/images/logo l3pc.webp",
+    ], 
     link: "https://les3ptiscochons.fr/" 
   },
   { 
@@ -30,7 +38,9 @@ const PROJECTS_DATA = [
     category: "Maintenance Web", 
     year: "2025", 
     description: "Mise à jour structurelle et maintenance du site e-commerce spécialisé.", 
-    image: "/images/logo beaba.webp", 
+    images: [
+        "/images/logo beaba.webp",
+    ], 
     link: "https://beaba-biere.fr/" 
   },
   { 
@@ -39,14 +49,17 @@ const PROJECTS_DATA = [
     category: "App Laravel / React", 
     year: "2025", 
     description: "Développement d'une application de gestion de projet style Trello.\nFonctionnalités Drag & Drop, colonnes dynamiques et persistance des données.\n(Site inaccessible car nécessitant une connection vpn)", 
-    image: "/images/image sae501.png", 
+    images: [
+        "/images/image sae501.png",
+        "/images/login sae501.png",
+    ], 
     link: "https://sae501.brimacombe.etu.mmi-unistra.fr/" 
   }
 ];
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE (INCHANGÉ) ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
@@ -109,7 +122,7 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   );
 };
 
-// --- CONTENEUR DE MOTS ---
+// --- CONTENEUR DE MOTS (INCHANGÉ) ---
 const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
   const getCharWidth = (char) => {
     const widthMap = { 'I': 0.3, 'i': 0.3, 'L': 0.7, 'l': 0.6, 'T': 0.8, 'F': 0.8, ' ': 0.3, 'M': 1.2, 'W': 1.1 };
@@ -134,7 +147,7 @@ const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
   );
 };
 
-// --- SCÈNE 3D ---
+// --- SCÈNE 3D (INCHANGÉ) ---
 function HeroText() {
   const groupRef = useRef();
   const { viewport } = useThree();
@@ -160,29 +173,116 @@ function HeroText() {
   );
 }
 
-// --- MODALE PROJET ---
+// --- MODALE PROJET (GROSSE MISE À JOUR) ---
 const ProjectModal = ({ project, onClose }) => {
+  // 1. État pour suivre quelle image on regarde (index du tableau)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // 2. État pour savoir si le mode "Plein écran" (Lightbox) est ouvert
+  const [isLightboxOpen, setLightboxOpen] = useState(false);
+
+  // Sécurité : si pas d'images, on met un tableau vide
+  const images = project.images || [];
+
+  // Fonction Suivante
+  const nextImage = (e) => {
+    e.stopPropagation(); // Empêche de fermer la modale
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  // Fonction Précédente
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-sm" />
-      <motion.div layoutId={`project-${project.id}`} className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl z-10" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-white text-black w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-lg md:text-xl hover:scale-110 transition cursor-pointer">✕</button>
-        <div className="w-full h-[40%] md:w-1/2 md:h-full relative bg-gray-900">
-            <motion.img src={project.image} className="w-full h-full object-cover opacity-80" alt={project.title} />
-        </div>
-        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-white overflow-y-auto">
-           <motion.h2 layout="position" className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</motion.h2>
-           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</motion.p>
-           <motion.a initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} href={project.link} target="_blank" rel="noreferrer" className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer">Voir le projet</motion.a>
-        </div>
-      </motion.div>
-    </div>
+    <>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-sm" />
+        
+        <motion.div layoutId={`project-${project.id}`} className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl z-10" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-white text-black w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-lg md:text-xl hover:scale-110 transition cursor-pointer">✕</button>
+          
+          {/* SECTION IMAGE / CAROUSEL */}
+          <div className="w-full h-[40%] md:w-1/2 md:h-full relative bg-gray-900 overflow-hidden group">
+              {/* L'image actuelle */}
+              <AnimatePresence mode='wait'>
+                <motion.img 
+                    key={currentImageIndex} // Clé unique pour forcer l'anim quand l'index change
+                    src={images[currentImageIndex]} 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.8 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full object-cover cursor-zoom-in hover:opacity-100 transition-opacity" 
+                    alt={`${project.title} - vue ${currentImageIndex + 1}`}
+                    // Au clic, on ouvre le mode plein écran
+                    onClick={() => setLightboxOpen(true)}
+                />
+              </AnimatePresence>
+
+              {/* Navigation du Carousel (Uniquement si plusieurs images) */}
+              {images.length > 1 && (
+                <>
+                    <button 
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-white hover:text-black text-white w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                    >
+                        ←
+                    </button>
+                    <button 
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-white hover:text-black text-white w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                    >
+                        →
+                    </button>
+                    {/* Indicateur de page (ex: 1/3) */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-xs font-mono text-white backdrop-blur-md">
+                        {currentImageIndex + 1} / {images.length}
+                    </div>
+                </>
+              )}
+          </div>
+
+          {/* CONTENU TEXTE */}
+          <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-white overflow-y-auto">
+             <motion.h2 layout="position" className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</motion.h2>
+             <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</motion.p>
+             <motion.a initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} href={project.link} target="_blank" rel="noreferrer" className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer">Voir le projet</motion.a>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* LIGHTBOX (PLEIN ÉCRAN) */}
+      <AnimatePresence>
+        {isLightboxOpen && (
+            <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center cursor-zoom-out p-4"
+                onClick={() => setLightboxOpen(false)}
+            >
+                {/* Image en grand */}
+                <motion.img 
+                    initial={{ scale: 0.9 }} 
+                    animate={{ scale: 1 }} 
+                    src={images[currentImageIndex]} 
+                    className="max-w-full max-h-screen object-contain rounded-lg shadow-2xl"
+                />
+                <div className="absolute bottom-10 text-white font-mono text-sm bg-black/50 px-4 py-2 rounded-full">
+                    Cliquez n'importe où pour fermer
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
 export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
-  const [isMenuOpen, setMenuOpen] = useState(false); // etat menu mobile
+  const [isMenuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (selectedProject || isMenuOpen) {
@@ -211,59 +311,32 @@ export default function App() {
       {/* 2. LAYER CONTENU */}
       <main className="relative z-10 w-full flex flex-col min-h-screen pointer-events-none">
         
-        {/* NAV MODIFIÉE POUR MOBILE */}
         <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 text-white mix-blend-difference md:mix-blend-normal">
-            
             <span className="font-sync font-bold text-sm md:text-lg pointer-events-auto cursor-pointer z-50 mix-blend-difference">Léo Brimacombe</span>
-            
-            {/* MENU PC Invisible sur Mobile */}
             <div className="hidden md:flex gap-6 font-mono text-xs pointer-events-auto mix-blend-difference">
                 <a href="#about" className="hover:text-blue-400 cursor-pointer transition-colors">A PROPOS</a>
                 <a href="#work" className="hover:text-blue-400 cursor-pointer transition-colors">MON TRAVAIL</a>
                 <a href="#contact" className="hover:text-blue-400 cursor-pointer transition-colors">CONTACT</a>
             </div>
-
-            {/* BOUTON BURGER Visible uniquement sur Mobile */}
-            <button 
-                onClick={() => setMenuOpen(!isMenuOpen)}
-                className="md:hidden pointer-events-auto z-50 font-mono text-xs border border-white/50 px-4 py-2 rounded-full backdrop-blur-md bg-black/20 text-white"
-            >
+            <button onClick={() => setMenuOpen(!isMenuOpen)} className="md:hidden pointer-events-auto z-50 font-mono text-xs border border-white/50 px-4 py-2 rounded-full backdrop-blur-md bg-black/20 text-white">
                 {isMenuOpen ? 'FERMER' : 'MENU +'}
             </button>
         </nav>
 
-        {/* MENU MOBILE PLEIN ÉCRAN */}
         <AnimatePresence>
             {isMenuOpen && (
                 <motion.div
-                    initial={{ x: "100%" }}
-                    animate={{ x: 0 }}
-                    exit={{ x: "100%" }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }}
                     className="fixed inset-0 z-40 bg-black flex flex-col justify-center items-center gap-8 pointer-events-auto md:hidden"
                 >
                     <motion.div className="flex flex-col gap-8 text-center" initial="closed" animate="open" variants={{ open: { transition: { staggerChildren: 0.1 } } }}>
                         {['A PROPOS', 'MES TRAVAUX'].map((item, i) => (
-                            <motion.a 
-                                key={item}
-                                href={item === 'A PROPOS' ? '#about' : '#work'}
-                                onClick={() => setMenuOpen(false)}
-                                variants={{ closed: { opacity: 0, y: 20 }, open: { opacity: 1, y: 0 } }}
-                                className="text-4xl font-sync font-black text-white hover:text-blue-600 transition-colors"
-                            >
+                            <motion.a key={item} href={item === 'A PROPOS' ? '#about' : '#work'} onClick={() => setMenuOpen(false)} variants={{ closed: { opacity: 0, y: 20 }, open: { opacity: 1, y: 0 } }} className="text-4xl font-sync font-black text-white hover:text-blue-600 transition-colors">
                                 {item}
                             </motion.a>
                         ))}
                     </motion.div>
-
-                    <motion.a 
-                        href="#contact"
-                        onClick={() => setMenuOpen(false)}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="mt-8 px-8 py-4 bg-blue-600 text-white font-bold font-mono rounded-full uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all"
-                    >
+                    <motion.a href="#contact" onClick={() => setMenuOpen(false)} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="mt-8 px-8 py-4 bg-blue-600 text-white font-bold font-mono rounded-full uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all">
                         Contact
                     </motion.a>
                 </motion.div>
@@ -271,11 +344,10 @@ export default function App() {
         </AnimatePresence>
 
         <section className="h-screen w-full flex flex-col justify-end p-8 pb-32">
-             <div className="text-center text-xs font-mono text-gray-500 animate-pulse">( DESCENDEZ )</div>
+             <div className="text-center text-xs font-mono text-gray-500 animate-pulse">V scrollez V</div>
         </section>
 
         <div className="bg-[#050505] w-full relative z-20 shadow-[0_-50px_100px_rgba(5,5,5,1)] pointer-events-auto">
-            
             <div className="bg-blue-600 text-black py-2 overflow-hidden w-full">
                 <div className="flex animate-marquee whitespace-nowrap">
                     <span className="text-2xl md:text-4xl font-black font-sync mx-4">{MARQUEE_TEXT.repeat(6)}</span>
