@@ -60,7 +60,8 @@ const PROJECTS_DATA = [
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE (OPTIMISÉ) ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE (CORRIGÉ & OPTIMISÉ) ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
@@ -68,6 +69,8 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const [loaded, setLoaded] = useState(false);
   const worldPos = useMemo(() => new THREE.Vector3(), []);
   
+  const maxDistSq = 2.25; // Distance d'activation au carré
+
   const animation = useMemo(() => ({
     startZ: 0 - Math.random() * 20, 
     speed: 8 + Math.random() * 5,
@@ -88,21 +91,57 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
           meshRef.current.scale.set(0, 0, 0);
           return;
       }
+
+      // --- CALCULS SOURIS ---
       const mouseX = (state.pointer.x * viewport.width) / 2;
       const mouseY = (state.pointer.y * viewport.height) / 2;
+
       meshRef.current.getWorldPosition(worldPos);
+      
       const dx = mouseX - worldPos.x;
       const dy = mouseY - worldPos.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const maxDist = 1.5;
-      const influence = Math.max(0, 1 - distance / maxDist);
-      const targetZ = position[2] - influence * 0.5;
-      const targetScale = 1;
+      
+      const distSq = dx * dx + dy * dy;
 
+      // --- OPTIMISATION ---
+      // Si la souris est loin, on coupe les calculs lourds...
+      if (distSq > maxDistSq) {
+          // ... MAIS on assure l'animation d'entrée (C'est ça qui manquait !) 👇
+          
+          // 1. On ramène le Z à sa place
+          meshRef.current.position.z = THREE.MathUtils.damp(meshRef.current.position.z, position[2], animation.speed, delta);
+          
+          // 2. On fait grandir le texte s'il est encore petit (FIX)
+          const currentScale = meshRef.current.scale.x;
+          if (currentScale < 0.99) {
+              const newScale = THREE.MathUtils.damp(currentScale, 1, animation.speed, delta);
+              meshRef.current.scale.set(newScale, newScale, newScale);
+          }
+
+          // 3. On calme les effets (reset)
+          materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, 0, 0.1);
+          materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, 0, 0.1);
+          
+          if (!isNeon) materialRef.current.color.lerp(new THREE.Color("white"), 0.1);
+          if (isNeon) materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(materialRef.current.emissiveIntensity, 2, 0.1);
+          
+          return; // On arrête ici pour économiser des ressources
+      }
+
+      // --- CALCULS COMPLETS (Si la souris est proche) ---
+      const distance = Math.sqrt(distSq);
+      const influence = 1 - distance / 1.5;
+
+      const targetZ = position[2] - influence * 0.5;
+      
       meshRef.current.position.z = THREE.MathUtils.damp(meshRef.current.position.z, targetZ, animation.speed, delta);
+      
       const currentScale = meshRef.current.scale.x;
-      const newScale = THREE.MathUtils.damp(currentScale, targetScale, animation.speed, delta);
-      meshRef.current.scale.set(newScale, newScale, newScale);
+      if (currentScale < 0.99) {
+          const newScale = THREE.MathUtils.damp(currentScale, 1, animation.speed, delta);
+          meshRef.current.scale.set(newScale, newScale, newScale);
+      }
+
       materialRef.current.distort = THREE.MathUtils.lerp(materialRef.current.distort, influence * 0.6, 0.1);
       materialRef.current.speed = THREE.MathUtils.lerp(materialRef.current.speed, influence * 5, 0.1);
 
@@ -116,9 +155,26 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   });
 
   return (
-    <Text ref={meshRef} font="/Michroma-Regular.ttf" fontSize={fontSize} position={position} anchorX="center" anchorY="middle" onSync={() => setLoaded(true)}>
+    <Text
+      ref={meshRef}
+      font="/Michroma-Regular.ttf"
+      fontSize={fontSize}
+      position={position}
+      anchorX="center"
+      anchorY="middle"
+      sdfGlyphSize={64} // Optimisation qualité/perf
+      onSync={() => setLoaded(true)}
+    >
       {char}
-      <MeshDistortMaterial ref={materialRef} color={baseColor} speed={0} distort={0} toneMapped={false} emissive={isNeon ? baseColor : "black"} emissiveIntensity={isNeon ? 2 : 0} />
+      <MeshDistortMaterial
+        ref={materialRef}
+        color={baseColor}
+        speed={0}
+        distort={0}
+        toneMapped={false}
+        emissive={isNeon ? baseColor : "black"}
+        emissiveIntensity={isNeon ? 2 : 0}
+      />
     </Text>
   );
 };
