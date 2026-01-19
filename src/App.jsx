@@ -4,9 +4,7 @@ import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 
-// --- DONNÉES (MISES À JOUR AVEC TABLEAUX D'IMAGES) ---
-// J'ai transformé 'image' en 'images' (tableau). 
-// J'ai dupliqué les images pour l'exemple, tu pourras mettre tes vraies images sup.
+// --- DONNÉES (AVEC TAGS TECHNO AJOUTÉS) ---
 const PROJECTS_DATA = [
   { 
     id: 1, 
@@ -14,10 +12,10 @@ const PROJECTS_DATA = [
     category: "Création Site Web", 
     year: "2025", 
     description: "Création complète et design du site vitrine esprits-conscients.fr.\nIdentité visuelle et intégration web.", 
-    // Tableau d'images pour le carousel
+    // 👇 NOUVEAU : Liste des technos
+    tags: ["WordPress", "CSS Grids", "JavaScript", "Figma", "SEO"],
     images: [
         "/images/logo esprit conscients.webp",
-        // Ajoute d'autres images ici, ex: "/images/projet1-screen2.webp"
     ], 
     link: "https://esprits-conscients.fr/esprits-conscients/" 
   },
@@ -27,6 +25,7 @@ const PROJECTS_DATA = [
     category: "Refonte / Mise à jour", 
     year: "2025", 
     description: "Modernisation technique, optimisation et mise à jour du contenu pour cette institution.", 
+    tags: ["HTML5", "SASS", "JS Vanilla", "Optimisation", "Accessibilité"],
     images: [
         "/images/logo l3pc.webp",
     ], 
@@ -38,6 +37,7 @@ const PROJECTS_DATA = [
     category: "Maintenance Web", 
     year: "2025", 
     description: "Mise à jour structurelle et maintenance du site e-commerce spécialisé.", 
+    tags: ["PrestaShop", "PHP", "Smarty", "MySQL", "E-commerce"],
     images: [
         "/images/logo beaba.webp",
     ], 
@@ -49,6 +49,7 @@ const PROJECTS_DATA = [
     category: "App Laravel / React", 
     year: "2025", 
     description: "Développement d'une application de gestion de projet style Trello.\nFonctionnalités Drag & Drop, colonnes dynamiques et persistance des données.\n(Site inaccessible car nécessitant une connection vpn)", 
+    tags: ["Laravel", "React.js", "Tailwind", "Inertia", "DnD Kit", "MySQL"],
     images: [
         "/images/image sae501.png",
         "/images/login sae501.png",
@@ -59,7 +60,7 @@ const PROJECTS_DATA = [
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
 
-// --- COMPOSANT : LETTRE INDIVIDUELLE (INCHANGÉ) ---
+// --- COMPOSANT : LETTRE INDIVIDUELLE ---
 const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   const meshRef = useRef();
   const materialRef = useRef();
@@ -122,7 +123,7 @@ const InteractiveLetter = ({ char, position, fontSize, baseColor, isNeon }) => {
   );
 };
 
-// --- CONTENEUR DE MOTS (INCHANGÉ) ---
+// --- CONTENEUR DE MOTS ---
 const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
   const getCharWidth = (char) => {
     const widthMap = { 'I': 0.3, 'i': 0.3, 'L': 0.7, 'l': 0.6, 'T': 0.8, 'F': 0.8, ' ': 0.3, 'M': 1.2, 'W': 1.1 };
@@ -147,7 +148,7 @@ const SplitWord = ({ text, position, fontSize, color, isNeon = false }) => {
   );
 };
 
-// --- SCÈNE 3D (INCHANGÉ) ---
+// --- SCÈNE 3D ---
 function HeroText() {
   const groupRef = useRef();
   const { viewport } = useThree();
@@ -173,23 +174,17 @@ function HeroText() {
   );
 }
 
-// --- MODALE PROJET (GROSSE MISE À JOUR) ---
+// --- MODALE PROJET (AVEC TAGS TECHNO) ---
 const ProjectModal = ({ project, onClose }) => {
-  // 1. État pour suivre quelle image on regarde (index du tableau)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // 2. État pour savoir si le mode "Plein écran" (Lightbox) est ouvert
   const [isLightboxOpen, setLightboxOpen] = useState(false);
-
-  // Sécurité : si pas d'images, on met un tableau vide
   const images = project.images || [];
 
-  // Fonction Suivante
   const nextImage = (e) => {
-    e.stopPropagation(); // Empêche de fermer la modale
+    e.stopPropagation();
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
 
-  // Fonction Précédente
   const prevImage = (e) => {
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -203,12 +198,10 @@ const ProjectModal = ({ project, onClose }) => {
         <motion.div layoutId={`project-${project.id}`} className="bg-[#0a0a0a] border border-white/10 w-full max-w-5xl h-[85vh] md:h-[80vh] rounded-2xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl z-10" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-white text-black w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-lg md:text-xl hover:scale-110 transition cursor-pointer">✕</button>
           
-          {/* SECTION IMAGE / CAROUSEL */}
           <div className="w-full h-[40%] md:w-1/2 md:h-full relative bg-gray-900 overflow-hidden group">
-              {/* L'image actuelle */}
               <AnimatePresence mode='wait'>
                 <motion.img 
-                    key={currentImageIndex} // Clé unique pour forcer l'anim quand l'index change
+                    key={currentImageIndex} 
                     src={images[currentImageIndex]} 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.8 }}
@@ -216,27 +209,14 @@ const ProjectModal = ({ project, onClose }) => {
                     transition={{ duration: 0.3 }}
                     className="w-full h-full object-cover cursor-zoom-in hover:opacity-100 transition-opacity" 
                     alt={`${project.title} - vue ${currentImageIndex + 1}`}
-                    // Au clic, on ouvre le mode plein écran
                     onClick={() => setLightboxOpen(true)}
                 />
               </AnimatePresence>
 
-              {/* Navigation du Carousel (Uniquement si plusieurs images) */}
               {images.length > 1 && (
                 <>
-                    <button 
-                        onClick={prevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-white hover:text-black text-white w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
-                    >
-                        ←
-                    </button>
-                    <button 
-                        onClick={nextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-white hover:text-black text-white w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
-                    >
-                        →
-                    </button>
-                    {/* Indicateur de page (ex: 1/3) */}
+                    <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-white hover:text-black text-white w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100">←</button>
+                    <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-white hover:text-black text-white w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100">→</button>
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-xs font-mono text-white backdrop-blur-md">
                         {currentImageIndex + 1} / {images.length}
                     </div>
@@ -244,35 +224,35 @@ const ProjectModal = ({ project, onClose }) => {
               )}
           </div>
 
-          {/* CONTENU TEXTE */}
           <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-white overflow-y-auto">
              <motion.h2 layout="position" className="text-2xl md:text-4xl font-black mb-4 font-sync">{project.title}</motion.h2>
              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-gray-400 mb-6 md:mb-8 text-sm md:text-base whitespace-pre-line leading-relaxed">{project.description}</motion.p>
+             
+             {/* 👇 NOUVEAU : AFFICHAGE DES TAGS TECHNO */}
+             <div className="flex flex-wrap gap-2 mb-8">
+                {project.tags && project.tags.map((tag, i) => (
+                    <motion.span 
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.8 }} 
+                        animate={{ opacity: 1, scale: 1 }} 
+                        transition={{ delay: 0.3 + (i * 0.05) }}
+                        className="px-3 py-1 border border-white/20 rounded-full text-[10px] md:text-xs font-mono text-gray-300 hover:bg-white hover:text-black transition-colors duration-300 cursor-default"
+                    >
+                        {tag}
+                    </motion.span>
+                ))}
+             </div>
+
              <motion.a initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} href={project.link} target="_blank" rel="noreferrer" className="px-6 py-3 bg-white text-black font-bold uppercase w-max text-sm md:text-base hover:bg-blue-500 hover:text-white transition rounded cursor-pointer">Voir le projet</motion.a>
           </div>
         </motion.div>
       </div>
 
-      {/* LIGHTBOX (PLEIN ÉCRAN) */}
       <AnimatePresence>
         {isLightboxOpen && (
-            <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                exit={{ opacity: 0 }} 
-                className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center cursor-zoom-out p-4"
-                onClick={() => setLightboxOpen(false)}
-            >
-                {/* Image en grand */}
-                <motion.img 
-                    initial={{ scale: 0.9 }} 
-                    animate={{ scale: 1 }} 
-                    src={images[currentImageIndex]} 
-                    className="max-w-full max-h-screen object-contain rounded-lg shadow-2xl"
-                />
-                <div className="absolute bottom-10 text-white font-mono text-sm bg-black/50 px-4 py-2 rounded-full">
-                    Cliquez n'importe où pour fermer
-                </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center cursor-zoom-out p-4" onClick={() => setLightboxOpen(false)}>
+                <motion.img initial={{ scale: 0.9 }} animate={{ scale: 1 }} src={images[currentImageIndex]} className="max-w-full max-h-screen object-contain rounded-lg shadow-2xl" />
+                <div className="absolute bottom-10 text-white font-mono text-sm bg-black/50 px-4 py-2 rounded-full">Cliquer n'importe où pour fermer</div>
             </motion.div>
         )}
       </AnimatePresence>
