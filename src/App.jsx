@@ -42,7 +42,7 @@ const PROJECTS_DATA = [
     category: "App Laravel / React", 
     year: "2025", 
     description: "Développement d'une application de gestion de projet style Trello.\nFonctionnalités Drag & Drop, colonnes dynamiques et persistance des données.\n(Site inaccessible car nécessitant une connection vpn)", 
-    tags: ["Laravel", "React.js", "Tailwind", "Inertia", "DnD Kit", "MySQL"],
+    tags: ["Laravel", "Tailwind", "PHP", "MySQL", "JS", "CSS"],
     images: ["/images/image sae501.png", "/images/login sae501.png"], 
     link: "https://sae501.brimacombe.etu.mmi-unistra.fr/",
     gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501"
