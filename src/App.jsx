@@ -327,9 +327,43 @@ const ProjectModal = ({ project, onClose }) => {
 
       <AnimatePresence>
         {isLightboxOpen && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center cursor-zoom-out p-4" onClick={() => setLightboxOpen(false)}>
-                <motion.img initial={{ scale: 0.9 }} animate={{ scale: 1 }} src={images[currentImageIndex]} className="max-w-full max-h-screen object-contain rounded-lg shadow-2xl" />
-                <div className="absolute bottom-10 text-white font-mono text-sm bg-black/50 px-4 py-2 rounded-full">Cliquer n'importe où pour fermer</div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center cursor-zoom-out" onClick={() => setLightboxOpen(false)}>
+                
+                {images.length > 1 && (
+                    <button 
+                        className="absolute left-0 top-0 h-full w-[20%] z-50 flex items-center justify-start pl-8 opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer group"
+                        onClick={(e) => { e.stopPropagation(); prevImage(e); }}
+                    >
+                        <div className="bg-black/50 p-4 rounded-full backdrop-blur-md group-hover:scale-110 transition-transform">
+                             <span className="text-white text-3xl font-bold">←</span>
+                        </div>
+                    </button>
+                )}
+
+                {images.length > 1 && (
+                    <button 
+                        className="absolute right-0 top-0 h-full w-[20%] z-50 flex items-center justify-end pr-8 opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer group"
+                        onClick={(e) => { e.stopPropagation(); nextImage(e); }}
+                    >
+                        <div className="bg-black/50 p-4 rounded-full backdrop-blur-md group-hover:scale-110 transition-transform">
+                             <span className="text-white text-3xl font-bold">→</span>
+                        </div>
+                    </button>
+                )}
+
+                <motion.img 
+                    key={currentImageIndex}
+                    initial={{ opacity: 0, scale: 0.95 }} 
+                    animate={{ opacity: 1, scale: 1 }} 
+                    exit={{ opacity: 0, scale: 0.95 }} 
+                    transition={{ duration: 0.2 }}
+                    src={images[currentImageIndex]} 
+                    className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl pointer-events-none" 
+                />
+                
+                <div className="absolute bottom-10 text-white font-mono text-sm bg-black/50 px-4 py-2 rounded-full backdrop-blur-md">
+                    {currentImageIndex + 1} / {images.length} • Cliquer n'importe où pour fermer
+                </div>
             </motion.div>
         )}
       </AnimatePresence>
@@ -340,6 +374,7 @@ const ProjectModal = ({ project, onClose }) => {
 export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (selectedProject || isMenuOpen) {
@@ -351,8 +386,20 @@ export default function App() {
     return () => { document.body.style.overflow = ''; };
   }, [selectedProject, isMenuOpen]);
 
-  // Récupérer les années uniques et les trier (plus récent au plus ancien)
-  const sortedYears = [...new Set(PROJECTS_DATA.map(p => p.year))].sort((a, b) => b - a);
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery) return PROJECTS_DATA;
+    const lowerQuery = searchQuery.toLowerCase();
+    
+    return PROJECTS_DATA.filter(p => 
+        p.title.toLowerCase().includes(lowerQuery) ||
+        p.description.toLowerCase().includes(lowerQuery) ||
+        p.category.toLowerCase().includes(lowerQuery) ||
+        p.tags.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
+        p.year.includes(lowerQuery)
+    );
+  }, [searchQuery]);
+
+  const sortedYears = [...new Set(filteredProjects.map(p => p.year))].sort((a, b) => b - a);
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden">
@@ -440,47 +487,88 @@ export default function App() {
                 </div>
             </section>
 
-            {/* SECTION TRAVAUX MODIFIÉE : GROUPÉE PAR ANNÉE */}
+            {/* SECTION TRAVAUX AVEC BARRE DE RECHERCHE MODIFIÉE */}
             <section id="work" className="py-20 md:py-24 px-6 max-w-7xl mx-auto border-b border-white/10">
-                <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-12 uppercase">mes travaux</h2>
                 
-                {sortedYears.map((year) => (
-                    <div key={year} className="mb-16 last:mb-0">
-                        {/* HEADER DE L'ANNÉE */}
-                        <div className="flex items-center gap-4 mb-8 opacity-50">
-                            <span className="h-px w-8 bg-blue-500"></span>
-                            <h3 className="text-xl font-mono font-bold text-white">{year}</h3>
-                            <span className="h-px w-full bg-white/10"></span>
-                        </div>
-
-                        {/* LISTE DES PROJETS DE CETTE ANNÉE */}
-                        <div className="flex flex-col gap-2">
-                            {PROJECTS_DATA.filter(p => p.year === year).map((p, i) => (
-                            <motion.div 
-                                layoutId={`project-${p.id}`}
-                                key={p.id}
-                                onClick={() => setSelectedProject(p)} 
-                                className="group border-t border-white/10 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-white/5 px-2 md:px-4 transition-colors w-full gap-4 md:gap-0"
-                                initial={{ opacity: 0, y: 20 }} 
-                                whileInView={{ opacity: 1, y: 0 }} 
-                                viewport={{ once: true }} 
-                                transition={{ delay: i * 0.1 }}
+                {/* Header flexible avec Titre à gauche et Input à droite */}
+                <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+                    <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-4 md:mb-0 uppercase">mes travaux</h2>
+                    
+                    {/* INPUT DE RECHERCHE MODIFIÉ AVEC CROIX ET ICONE BLEUE */}
+                    <div className="relative w-full md:w-64 group">
+                        <input 
+                            type="text" 
+                            placeholder="RECHERCHER UN PROJET..." 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-transparent border-b border-white/20 py-2 pr-8 text-white font-mono text-xs focus:outline-none focus:border-blue-500 transition-colors uppercase placeholder:text-gray-700"
+                        />
+                        
+                        {searchQuery ? (
+                            // BOUTON CROIX POUR EFFACER (Affiché si texte)
+                            <button 
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 text-white hover:text-blue-500 transition-colors"
                             >
-                                <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
-                                    <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
-                                    <motion.h3 layout="position" className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">
-                                        {p.title}
-                                    </motion.h3>
-                                </div>
-                                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                                    <span className="text-gray-500 font-mono text-[10px] md:text-xs">{p.category}</span>
-                                    <span className="text-gray-600 font-mono text-[10px] md:text-xs border border-white/10 px-3 py-1 rounded-full pointer-events-none">{p.year}</span>
-                                </div>
-                            </motion.div>
-                            ))}
-                        </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        ) : (
+                            // ICONE LOUPE BLEUE (Affichée si vide)
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                </svg>
+                            </div>
+                        )}
                     </div>
-                ))}
+                </div>
+                
+                {/* Boucle sur les années FILTRÉES */}
+                {sortedYears.length > 0 ? (
+                    sortedYears.map((year) => (
+                        <div key={year} className="mb-16 last:mb-0">
+                            {/* HEADER DE L'ANNÉE */}
+                            <div className="flex items-center gap-4 mb-8 opacity-50">
+                                <span className="h-px w-8 bg-blue-500"></span>
+                                <h3 className="text-xl font-mono font-bold text-white">{year}</h3>
+                                <span className="h-px w-full bg-white/10"></span>
+                            </div>
+
+                            {/* LISTE DES PROJETS DE CETTE ANNÉE */}
+                            <div className="flex flex-col gap-2">
+                                {filteredProjects.filter(p => p.year === year).map((p, i) => (
+                                <motion.div 
+                                    layoutId={`project-${p.id}`}
+                                    key={p.id}
+                                    onClick={() => setSelectedProject(p)} 
+                                    className="group border-t border-white/10 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-white/5 px-2 md:px-4 transition-colors w-full gap-4 md:gap-0"
+                                    initial={{ opacity: 0, y: 20 }} 
+                                    whileInView={{ opacity: 1, y: 0 }} 
+                                    viewport={{ once: true }} 
+                                    transition={{ delay: i * 0.1 }}
+                                >
+                                    <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
+                                        <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
+                                        <motion.h3 layout="position" className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">
+                                            {p.title}
+                                        </motion.h3>
+                                    </div>
+                                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                                        <span className="text-gray-500 font-mono text-[10px] md:text-xs">{p.category}</span>
+                                        <span className="text-gray-600 font-mono text-[10px] md:text-xs border border-white/10 px-3 py-1 rounded-full pointer-events-none">{p.year}</span>
+                                    </div>
+                                </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-20 text-gray-500 font-mono text-sm">
+                        AUCUN PROJET TROUVÉ POUR "{searchQuery}"
+                    </div>
+                )}
             </section>
 
             <footer id="contact" className="py-20 md:py-32 px-6 bg-blue-600 text-white min-h-[50vh] md:min-h-[70vh] flex flex-col justify-between">
