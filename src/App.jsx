@@ -7,6 +7,17 @@ import * as THREE from 'three';
 // --- DONNÉES ---
 const PROJECTS_DATA = [
   { 
+    id: 8, 
+    title: "SITE DE GESTION ELECTRIQUE", 
+    category: "App Laravel / Grafana", 
+    year: "2026", 
+    description: "Développement d'une application web Laravel intégrant des tableaux de bord Grafana.\nGestion, requêtage et visualisation de données temporelles via InfluxDB et le langage Flux.", 
+    tags: ["Laravel", "Tailwind", "JS", "Grafana", "InfluxDB", "Flux"],
+    images: ["/images/grafana1.png", "/images/grafana-dashboard.png", "/images/grafana-coutss.png", "/images/grafana-prod.png", "/images/grafana-carte.png"], 
+    link: "https://sae501-grafana.brimacombe.etu.mmi-unistra.fr/", 
+    gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501-grafana"
+  },
+  { 
     id: 1, 
     title: "ESPRITS CONSCIENTS", 
     category: "Création Site Web", 
@@ -68,7 +79,7 @@ const PROJECTS_DATA = [
     images: ["/images/person_runner1.png"], 
     link: "https://gitlab.unistra.fr/lbrimacombe/sae402",
     gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae402"
-    },
+  },
   { 
     id: 7, 
     title: "SITE SUR LE CLIMAT", 
@@ -79,7 +90,7 @@ const PROJECTS_DATA = [
     images: ["/images/avions.png"], 
     link: "https://leobrimacombe.github.io/SAE-303/",
     gitLink: "https://github.com/leobrimacombe/SAE-303"
-    }
+  }
 ];
 
 const MARQUEE_TEXT = "REACT • JS • DESIGN • INTERACTION • LARAVEL • SYMFONY • HTML • CSS • NEXT.JS • UX/UI • PHP • ";
@@ -282,7 +293,6 @@ const ProjectModal = ({ project, onClose }) => {
                 ))}
              </div>
 
-             {/* ZONE BOUTONS */}
              <div className="flex flex-wrap gap-4">
                 <motion.a 
                     initial={{ opacity: 0, y: 10 }} 
@@ -296,7 +306,6 @@ const ProjectModal = ({ project, onClose }) => {
                     Voir le projet
                 </motion.a>
 
-                {/* Bouton Git conditionnel */}
                 {project.gitLink && (
                     <motion.a 
                         initial={{ opacity: 0, y: 10 }} 
@@ -307,7 +316,6 @@ const ProjectModal = ({ project, onClose }) => {
                         rel="noreferrer" 
                         className="px-6 py-3 border border-white/30 text-white font-bold uppercase w-max text-sm md:text-base hover:bg-white hover:text-black transition rounded cursor-pointer flex items-center gap-2"
                     >
-                        {/* Icône GitHub simple (SVG) */}
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
                         Voir le Code
                     </motion.a>
@@ -342,6 +350,9 @@ export default function App() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [selectedProject, isMenuOpen]);
+
+  // Récupérer les années uniques et les trier (plus récent au plus ancien)
+  const sortedYears = [...new Set(PROJECTS_DATA.map(p => p.year))].sort((a, b) => b - a);
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden">
@@ -429,33 +440,47 @@ export default function App() {
                 </div>
             </section>
 
+            {/* SECTION TRAVAUX MODIFIÉE : GROUPÉE PAR ANNÉE */}
             <section id="work" className="py-20 md:py-24 px-6 max-w-7xl mx-auto border-b border-white/10">
                 <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-12 uppercase">mes travaux</h2>
-                <div className="flex flex-col gap-2">
-                    {PROJECTS_DATA.map((p, i) => (
-                      <motion.div 
-                        layoutId={`project-${p.id}`}
-                        key={p.id}
-                        onClick={() => setSelectedProject(p)} 
-                        className="group border-t border-white/10 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-white/5 px-2 md:px-4 transition-colors w-full gap-4 md:gap-0"
-                        initial={{ opacity: 0, y: 20 }} 
-                        whileInView={{ opacity: 1, y: 0 }} 
-                        viewport={{ once: true }} 
-                        transition={{ delay: i * 0.1 }}
-                      >
-                        <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
-                            <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
-                            <motion.h3 layout="position" className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">
-                                {p.title}
-                            </motion.h3>
+                
+                {sortedYears.map((year) => (
+                    <div key={year} className="mb-16 last:mb-0">
+                        {/* HEADER DE L'ANNÉE */}
+                        <div className="flex items-center gap-4 mb-8 opacity-50">
+                            <span className="h-px w-8 bg-blue-500"></span>
+                            <h3 className="text-xl font-mono font-bold text-white">{year}</h3>
+                            <span className="h-px w-full bg-white/10"></span>
                         </div>
-                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                            <span className="text-gray-500 font-mono text-[10px] md:text-xs">{p.category}</span>
-                            <span className="text-gray-600 font-mono text-[10px] md:text-xs border border-white/10 px-3 py-1 rounded-full pointer-events-none">{p.year}</span>
+
+                        {/* LISTE DES PROJETS DE CETTE ANNÉE */}
+                        <div className="flex flex-col gap-2">
+                            {PROJECTS_DATA.filter(p => p.year === year).map((p, i) => (
+                            <motion.div 
+                                layoutId={`project-${p.id}`}
+                                key={p.id}
+                                onClick={() => setSelectedProject(p)} 
+                                className="group border-t border-white/10 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-white/5 px-2 md:px-4 transition-colors w-full gap-4 md:gap-0"
+                                initial={{ opacity: 0, y: 20 }} 
+                                whileInView={{ opacity: 1, y: 0 }} 
+                                viewport={{ once: true }} 
+                                transition={{ delay: i * 0.1 }}
+                            >
+                                <div className="flex items-baseline gap-4 md:gap-6 pointer-events-none">
+                                    <span className="font-mono text-gray-600 text-xs">0{p.id}</span>
+                                    <motion.h3 layout="position" className="text-2xl md:text-5xl font-bold text-gray-500 group-hover:text-white transition-colors font-sync uppercase">
+                                        {p.title}
+                                    </motion.h3>
+                                </div>
+                                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                                    <span className="text-gray-500 font-mono text-[10px] md:text-xs">{p.category}</span>
+                                    <span className="text-gray-600 font-mono text-[10px] md:text-xs border border-white/10 px-3 py-1 rounded-full pointer-events-none">{p.year}</span>
+                                </div>
+                            </motion.div>
+                            ))}
                         </div>
-                      </motion.div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </section>
 
             <footer id="contact" className="py-20 md:py-32 px-6 bg-blue-600 text-white min-h-[50vh] md:min-h-[70vh] flex flex-col justify-between">
