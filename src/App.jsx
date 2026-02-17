@@ -9,15 +9,15 @@ const PROJECTS_DATA = [
     { 
     id: 9, 
     title: "GESTIONNAIRE BOBINES IMPRESSIONS 3D", 
-    category: "App Laravel / Grafana", 
+    category: "App Next.js / TypeScript", 
     year: "2026", 
-    description: "Développement d'une application web Laravel intégrant des tableaux de bord Grafana.\nGestion, requêtage et visualisation de données temporelles via InfluxDB et le langage Flux.", 
-    tags: ["Laravel", "Tailwind", "JS", "Grafana", "InfluxDB", "Flux"],
-    images: ["/images/grafana1.png", "/images/grafana-dashboard.png", "/images/grafana-coutss.png", "/images/grafana-prod.png", "/images/grafana-carte.png"], 
-    link: "https://sae501-grafana.brimacombe.etu.mmi-unistra.fr/", 
-    gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501-grafana"
+    description: "Une application web Fullstack permettant aux passionnés d'impression 3D de gérer leur stock de bobines, suivre leur consommation en temps réel et analyser les coûts d'impression.", 
+    tags: ["Next.js", "Tailwind", "TypeScript", "Recharts", "Lucide React", "Supabase", "PostgreSQL"],
+    images: ["/images/bobines-1.png", "/images/bobines-2.png", "/images/bobines-3.png"], 
+    link: "https://bobines.vercel.app/", 
+    gitLink: "https://github.com/leobrimacombe/bobines"
   },
-  { 
+    { 
     id: 8, 
     title: "SITE DE GESTION ELECTRIQUE", 
     category: "App Laravel / Grafana", 
