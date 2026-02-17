@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, Environment, MeshDistortMaterial } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
+import { Analytics } from "@vercel/analytics/next"
 
 // --- DONNÉES ---
 const PROJECTS_DATA = [
