@@ -478,14 +478,12 @@ export default function App() {
                     <div>
                         <h2 className="text-xs font-bold text-blue-500 tracking-[0.5em] mb-8 uppercase">A Propos</h2>
                         <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-2xl md:text-5xl font-bold font-sync leading-tight text-white">
-                            JE CRÉE DES <span className="text-blue-600">EXPÉRIENCES</span> NUMÉRIQUES IMMERSIVES.
+                            DÉVELOPPEUR <span className="text-blue-600">FRONT-END</span> & CRÉATIF
                         </motion.h3>
                     </div>
                     <div className="flex flex-col justify-end">
                         <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="text-gray-400 text-base md:text-lg mb-8 leading-relaxed">
-                            Développeur créatif passionné par le design et la technologie. 
-                            Mon objectif est de transformer une simple navigation en une véritable exploration visuelle, 
-                            en utilisant les dernières technologies du web moderne.
+                        Développeur web full-stack en formation (BUT MMI), je suis un véritable touche-à-tout. Capable de déployer des back-ends complexes sous Laravel ou de coder des expériences immersives en React, je suis toujours à la recherche de nouveaux défis techniques pour repousser mes limites.
                         </motion.p>
                         <div className="flex flex-wrap gap-2 md:gap-3">
                             {["HTML", "CSS", "JS", "React", "Tailwind", "Next.js", "Laravel", "Symfony", "Three.js", "Figma", "Photoshop"].map((skill, index) => (
@@ -586,19 +584,19 @@ export default function App() {
                 <div className="max-w-7xl mx-auto w-full">
                     <h2 className="text-xs font-bold text-blue-900 tracking-[0.5em] mb-8 md:mb-12 uppercase">Contact</h2>
                     <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                        <h3 className="text-3xl md:text-6xl font-black font-sync mb-8 leading-tight">UN PROJET EN TÊTE ?<br /><span className="text-blue-950">TRAVAILLONS ENSEMBLE.</span></h3>
+                        <h3 className="text-3xl md:text-6xl font-black font-sync mb-8 leading-tight">VOUS CHERCHEZ UN DEV ?<br /><span className="text-blue-950">ENVOYEZ MOI UN MAIL.</span></h3>
                     </motion.div>
                 </div>
                 <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 md:gap-8 my-8 md:my-12">
-                    <motion.a href="mailto:leo.brimacombe@free.fr" className="text-[9vw] md:text-[3vw] font-black font-sync hover:text-blue-950 transition-colors duration-300 break-all leading-none" initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} whileHover={{ x: 20 }}>leo.brimacombe@free.fr</motion.a>
-                    <motion.a href="tel:+33768785238" className="text-xl md:text-3xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>+33 7 68 78 52 38</motion.a>
+                  <motion.a href="mailto:leo.brimacombe@free.fr" className="cursor-pointer whitespace-nowrap text-[clamp(1.2rem,5vw,4.5rem)] font-black font-sync hover:text-blue-950 transition-colors duration-300 leading-none" initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} whileHover={{ x: 20 }}>leo.brimacombe@free.fr</motion.a>
+                    <motion.a href="tel:+33768785238" className="cursor-pointer text-xl md:text-3xl font-mono border border-white/30 rounded-full px-6 py-3 md:px-8 md:py-4 w-max hover:bg-white hover:text-blue-600 transition-all duration-300" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>+33 7 68 78 52 38</motion.a>
                 </div>
                 <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-start md:items-end border-t border-white/20 pt-8 gap-6 md:gap-4">
                     <div className="font-mono text-xs opacity-70">© 2026 LÉO BRIMACOMBE.<br/>TOUS DROITS RÉSERVÉS.</div>
                     <div className="flex flex-wrap gap-4 md:gap-6 font-mono text-xs md:text-sm font-bold">
-                        <a href="https://www.linkedin.com/in/l%C3%A9o-brimacombe-23a6112a3/" target="_blank" rel="noreferrer" className="hover:text-blue-950 transition-colors">LINKEDIN</a>
-                        <a href="https://github.com/leobrimacombe" target="_blank" rel="noreferrer" className="hover:text-blue-950 transition-colors">GITHUB</a>
-                        <a href="https://gitlab.unistra.fr/lbrimacombe" target="_blank" rel="noreferrer" className="hover:text-blue-950 transition-colors">GITLAB</a>
+                        <a href="https://www.linkedin.com/in/l%C3%A9o-brimacombe-23a6112a3/" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-blue-950 transition-colors">LINKEDIN</a>
+                        <a href="https://github.com/leobrimacombe" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-blue-950 transition-colors">GITHUB</a>
+                        <a href="https://gitlab.unistra.fr/lbrimacombe" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-blue-950 transition-colors">GITLAB</a>
                     </div>
                 </div>
             </footer>
