@@ -18,10 +18,43 @@ html, body {
 /* Force le curseur normal partout */
 * { cursor: auto; }
 
+/* Smooth in-page scrolling for nav anchors; scroll-margin keeps the target clear of
+   the fixed nav. */
+html { scroll-behavior: smooth; }
+#about, #work, #contact { scroll-margin-top: 6rem; }
+
 .font-sync { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: -0.05em; }
+
+/* Nav links: an underline that draws in from the left on hover (uses currentColor
+   so it works through the bar's mix-blend-difference). */
+.nav-link { position: relative; }
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link:hover::after { transform: scaleX(1); }
 
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 .animate-marquee { animation: marquee 20s linear infinite; }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Accessibility: stop the looping CSS animations when the user asks for reduced
+   motion (framer-motion is handled separately via <MotionConfig reducedMotion>). */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-marquee,
+  .animate-pulse {
+    animation: none;
+  }
+  .nav-link::after { transition: none; }
+}
