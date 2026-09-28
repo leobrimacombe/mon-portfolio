@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400&display=swap');
-
+/* Syncopate (the display face) is loaded by a <link> in index.html, in parallel with
+   this stylesheet instead of behind a CSS @import. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,9 +15,6 @@ html, body {
 
 #root { width: 100%; min-height: 100vh; }
 
-/* Force le curseur normal partout */
-* { cursor: auto; }
-
 /* Smooth in-page scrolling for nav anchors; scroll-margin keeps the target clear of
    the fixed nav. */
 html { scroll-behavior: smooth; }
@@ -25,8 +22,9 @@ html { scroll-behavior: smooth; }
 
 .font-sync { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: -0.05em; }
 
-/* Nav links: an underline that draws in from the left on hover (uses currentColor
-   so it works through the bar's mix-blend-difference). */
+/* Nav links and the Work scope filter: an underline that draws in from the left on
+   hover or keyboard focus, and stays drawn on the active filter (aria-pressed). Uses
+   currentColor so it follows the text colour. */
 .nav-link { position: relative; }
 .nav-link::after {
   content: '';
@@ -40,7 +38,9 @@ html { scroll-behavior: smooth; }
   transform-origin: left;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.nav-link:hover::after { transform: scaleX(1); }
+.nav-link:hover::after,
+.nav-link:focus-visible::after,
+.nav-link[aria-pressed="true"]::after { transform: scaleX(1); }
 
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 .animate-marquee { animation: marquee 20s linear infinite; }
@@ -52,9 +52,6 @@ html { scroll-behavior: smooth; }
    motion (framer-motion is handled separately via <MotionConfig reducedMotion>). */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .animate-marquee,
-  .animate-pulse {
-    animation: none;
-  }
+  .animate-marquee { animation: none; }
   .nav-link::after { transition: none; }
 }

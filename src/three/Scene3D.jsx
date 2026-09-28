@@ -46,7 +46,9 @@ export function Scene3D({ onPerfDecline, paused }) {
         <ambientLight intensity={2} />
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={5} />
         <pointLight position={[-10, -10, -10]} intensity={5} color="#4f46e5" />
-        <Environment preset="city" />
+        {/* Self-hosted, downsampled copy of drei's "city" preset: same look, ~130 KB
+            instead of 1.5 MB, and no dependency on the CDN drei pulls presets from. */}
+        <Environment files="/env/city-256.hdr" />
         <HeroText reduced={reduced} />
       </Canvas>
     </div>

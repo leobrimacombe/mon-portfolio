@@ -10,8 +10,12 @@
  * @property {string}   description   Short summary shown at the top of the modal.
  * @property {string[]} tags          Tech / skill chips.
  * @property {string[]} images        Image paths for the carousel + lightbox.
- * @property {string}   link          Live or repo URL ("Voir le projet").
- * @property {string}   [gitLink]     Optional source URL ("Voir le Code").
+ * @property {string}   [link]        Live demo URL ("Voir le projet"); omit when there is
+ *                                     only the repository.
+ * @property {boolean}  [vpnOnly]     True when `link` only answers on the IUT network (VPN):
+ *                                     the modal then shows it as a secondary link with a
+ *                                     note, instead of a main button that would time out.
+ * @property {string}   [gitLink]     Optional source URL ("Voir le code").
  * @property {'iut' | 'pro'} [scope]  Grouping in the Work section: 'iut' for BUT MMI
  *                                     (SAE) projects, 'pro' for client / personal work.
  * @property {string[]} [competencies] AC codes this project proves (see data/competencies.js),
@@ -27,6 +31,12 @@
  * @property {string}   [learnings]   Takeaways / what you would do differently.
  */
 
+/** Visible labels for `Project.scope` (Work filter + list rows). */
+export const SCOPE_LABELS = {
+  pro: 'Pro & perso',
+  iut: 'IUT',
+};
+
 /** @type {Project[]} */
 export const PROJECTS_DATA = [
   // --- REAL PROJECTS -------------------------------------------------------------
@@ -37,41 +47,46 @@ export const PROJECTS_DATA = [
     title: "BOOKAPP",
     category: "App Next.js / Supabase",
     year: "2026",
-    description: "Un carnet de lecture numérique « pour les puristes » : un Index de recherche de livres, « L'Étui » (collection privée pour annoter et classer ses lectures) et « Le Club » (mur communautaire pour partager ses notes), avec des recommandations suggérées par IA (Google Gemini).",
+    description: "Un carnet de lecture numérique pour les puristes. On cherche des livres dans l'Index, on range, note et annote ses lectures dans L'Étui, et on partage ses notes sur Le Club, le mur communautaire. L'appli propose aussi des recommandations de lecture générées avec Google Gemini.",
     tags: ["Next.js", "React", "TypeScript", "Tailwind", "Supabase", "Gemini (IA)"],
-    images: ["/images/bookapp-1.png", "/images/bookapp-2.png", "/images/bookapp-3.png", "/images/bookapp-4.png", "/images/bookapp-5.png"],
+    images: ["/images/bookapp-1.webp", "/images/bookapp-2.webp", "/images/bookapp-3.webp", "/images/bookapp-4.webp", "/images/bookapp-5.webp"],
     link: "https://bibliotheque-livres.vercel.app/",
     gitLink: "https://github.com/leobrimacombe/biblioth-que-livres",
-    context: "Projet personnel mené de bout en bout. L'idée : un carnet de lecture numérique soigné « pour les puristes », réunissant en un seul endroit la recherche de livres, le suivi annotable de ses lectures et la découverte de nouveaux titres — là où les apps existantes sont souvent soit trop sociales, soit trop limitées.",
-    role: "Conception et développement en autonomie complète (solo) : direction produit, UI/UX et identité de marque, front-end, back-end et base de données, intégration de l'IA, puis déploiement et mise en ligne.",
-    solution: "Application fullstack Next.js (App Router) + TypeScript, avec Supabase pour la base PostgreSQL et l'authentification. Intégration de l'API Google Gemini pour générer des recommandations de lecture personnalisées. Direction artistique « édition numérique » assumée (marque BookApp, logo « B. », ton éditorial). Déploiement continu sur Vercel.",
-    result: "Application en ligne et fonctionnelle : Index de recherche de livres, « L'Étui » (collection privée pour annoter, noter et classer ses lectures), « Le Club » (mur communautaire de partage) et recommandations suggérées par IA.",
-    learnings: "Piloter seul un produit complet m'a appris à arbitrer en continu entre l'ambition et un périmètre réaliste. Techniquement : intégrer un LLM (Gemini) de façon utile et maîtrisée, gérer l'authentification et les données utilisateurs avec Supabase (sécurité, vie privée). Côté produit : poser une identité de marque et un ton cohérents pour donner une vraie personnalité au projet.",
+    context: "Projet personnel. L'idée était de réunir au même endroit la recherche de livres, le suivi annoté de ses lectures et la découverte de nouveaux titres. Les applis existantes sont souvent trop sociales, ou au contraire trop limitées.",
+    role: "J'ai mené le projet seul, de l'idée à la mise en ligne. J'ai conçu le produit, l'interface et l'identité de marque, développé le front-end, le back-end et la base de données, intégré Gemini, puis déployé l'application.",
+    solution: "Une application full-stack en Next.js (App Router) et TypeScript, avec Supabase pour la base PostgreSQL et l'authentification. Les recommandations personnalisées passent par l'API Google Gemini. Le design suit une direction « édition numérique », avec la marque BookApp, le logo « B. » et un ton éditorial. L'application est déployée en continu sur Vercel.",
+    result: "BookApp est en ligne, et ses quatre parties (Index, Étui, Club et recommandations) sont utilisables.",
+    learnings: "Porter seul un produit complet m'a obligé à arbitrer sans cesse entre l'ambition et ce qui était réaliste. Techniquement, je sais maintenant intégrer un LLM (Gemini) là où il est utile, et gérer l'authentification et les données des utilisateurs avec Supabase en pensant à la sécurité et à la vie privée. Enfin, j'ai appris à définir une identité de marque et un ton, puis à les garder cohérents sur tout le projet.",
   },
   {
     id: 9,
     scope: 'pro',
+    // Same stack as BookApp (Next.js + Supabase, deployed on Vercel); to be confirmed.
+    competencies: ['AC34.01', 'AC34.02', 'AC34.05'],
     title: "GESTIONNAIRE BOBINES IMPRESSIONS 3D",
     category: "App Next.js / TypeScript",
     year: "2026",
     description: "Une application web Fullstack permettant aux passionnés d'impression 3D de gérer leur stock de bobines, suivre leur consommation en temps réel et analyser les coûts d'impression.",
     tags: ["Next.js", "Tailwind", "TypeScript", "Recharts", "Lucide React", "Supabase", "PostgreSQL"],
-    images: ["/images/bobines-1.png", "/images/bobines-2.png", "/images/bobines-3.png"],
+    images: ["/images/bobines-1.webp", "/images/bobines-2.webp", "/images/bobines-3.webp"],
     link: "https://bobines.vercel.app/",
-    gitLink: "https://github.com/leobrimacombe/bobines"
+    gitLink: "https://github.com/leobrimacombe/bobines",
+    // [À COMPLÉTER : étude de cas (context, role, solution, result, learnings), comme BookApp.]
   },
   {
     id: 8,
     scope: 'iut',
     competencies: ['AC34.02', 'AC34.05'],
-    title: "SITE DE GESTION ELECTRIQUE",
+    title: "SITE DE GESTION ÉLECTRIQUE",
     category: "App Laravel / Grafana",
     year: "2026",
     description: "Développement d'une application web Laravel intégrant des tableaux de bord Grafana.\nGestion, requêtage et visualisation de données temporelles via InfluxDB et le langage Flux.",
     tags: ["Laravel", "Tailwind", "JS", "Grafana", "InfluxDB", "Flux"],
-    images: ["/images/grafana1.png", "/images/grafana-dashboard.png", "/images/grafana-coutss.png", "/images/grafana-prod.png", "/images/grafana-carte.png"],
+    images: ["/images/grafana-1.webp", "/images/grafana-dashboard.webp", "/images/grafana-couts.webp", "/images/grafana-prod.webp", "/images/grafana-carte.webp"],
     link: "https://sae501-grafana.brimacombe.etu.mmi-unistra.fr/",
-    gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501-grafana"
+    vpnOnly: true,
+    gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501-grafana",
+    // [À COMPLÉTER : étude de cas (context, role, solution, result, learnings), comme BookApp.]
   },
   {
     id: 1,
@@ -81,7 +96,8 @@ export const PROJECTS_DATA = [
     year: "2025",
     description: "Création complète et design du site vitrine esprits-conscients.fr.\nIdentité visuelle et intégration web.",
     tags: ["WordPress", "CSS Grids", "JavaScript", "Figma", "SEO"],
-    images: ["/images/logo esprit conscients.webp"],
+    // [À COMPLÉTER : captures du site livré, en plus du logo.]
+    images: ["/images/logo-esprits-conscients.webp"],
     link: "https://esprits-conscients.fr/esprits-conscients/",
   },
   {
@@ -92,7 +108,9 @@ export const PROJECTS_DATA = [
     year: "2025",
     description: "Modernisation technique, optimisation et mise à jour du contenu pour cette institution.",
     tags: ["HTML5", "SASS", "JS Vanilla", "Optimisation", "Accessibilité"],
-    images: ["/images/logo l3pc.webp"],
+    // [À COMPLÉTER : captures avant / après la refonte, et si possible des mesures
+    //  (scores Lighthouse avant / après) : c'est une preuve directe pour AC35.02.]
+    images: ["/images/logo-l3pc.webp"],
     link: "https://les3ptiscochons.fr/",
   },
   {
@@ -103,7 +121,9 @@ export const PROJECTS_DATA = [
     year: "2025",
     description: "Mise à jour structurelle et maintenance du site e-commerce spécialisé.",
     tags: ["PrestaShop", "PHP", "Smarty", "MySQL", "E-commerce"],
-    images: ["/images/logo beaba.webp"],
+    // [À COMPLÉTER : captures du site. Le lien renvoyait une erreur HTTPS côté serveur
+    //  (sept. 2026) : vérifier avec le client que le site est toujours en ligne.]
+    images: ["/images/logo-beaba.webp"],
     link: "https://beaba-biere.fr/",
   },
   {
@@ -113,23 +133,25 @@ export const PROJECTS_DATA = [
     title: "APPLI DE GESTION DE PROJET",
     category: "App Laravel / React",
     year: "2025",
-    description: "Développement d'une application de gestion de projet style Trello.\nFonctionnalités Drag & Drop, colonnes dynamiques et persistance des données.\n(Site inaccessible car nécessitant une connection vpn)",
+    description: "Développement d'une application de gestion de projet style Trello.\nFonctionnalités Drag & Drop, colonnes dynamiques et persistance des données.",
     tags: ["Laravel", "Tailwind", "PHP", "MySQL", "JS", "CSS"],
-    images: ["/images/image sae501.png", "/images/login sae501.png"],
+    images: ["/images/gestion-projet-1.webp", "/images/gestion-projet-login.webp"],
     link: "https://sae501.brimacombe.etu.mmi-unistra.fr/",
+    vpnOnly: true,
     gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae501"
   },
   {
     id: 5,
     scope: 'iut',
     competencies: ['AC34.02', 'AC34.03'],
-    title: "JEU DE CARTE",
+    title: "JEU DE CARTES",
     category: "Jeu JS",
     year: "2025",
-    description: "Développement d'un jeu de cartes permettant d'apprendre les cycle de l'eau.",
+    description: "Développement d'un jeu de cartes permettant d'apprendre le cycle de l'eau.",
     tags: ["PHP", "Symfony", "SQL", "JS"],
-    images: ["/images/decripteau1.png", "/images/decripteau2.png"],
+    images: ["/images/decrypteau-1.webp", "/images/decrypteau-2.webp"],
     link: "https://sae401-decrypteau.brimacombe.etu.mmi-unistra.fr/",
+    vpnOnly: true,
     gitLink: "https://gitlab.unistra.fr/sae401-justine-hannauer-nikita-kuznetsov-leo-brimacombe-romain-lapouge/sae401-justine-hannauer-nikita-kuznetsov-leo-brimacombe-romain-lapouge"
   },
   {
@@ -141,8 +163,9 @@ export const PROJECTS_DATA = [
     year: "2025",
     description: "Développement d'un jeu de parcours basé sur la physique sur le moteur de jeu Unity.",
     tags: ["Unity", "C#", "Game Design", "Blender"],
-    images: ["/images/person_runner1.png"],
-    link: "https://gitlab.unistra.fr/lbrimacombe/sae402",
+    // [À COMPLÉTER : une build WebGL jouable (itch.io…) ou une vidéo de gameplay, à mettre
+    //  dans `link` ; pour l'instant seul le dépôt est disponible.]
+    images: ["/images/unity-runner.webp"],
     gitLink: "https://gitlab.unistra.fr/lbrimacombe/sae402"
   },
   {
@@ -154,8 +177,9 @@ export const PROJECTS_DATA = [
     year: "2025",
     description: "Développement d'un site en JavaScript permettant de dénoncer les impacts environnementaux de l'aviation et de les comparer aux différents moyens de locomotion.",
     tags: ["HTML", "CSS", "JS", "Infographies", "Figma"],
-    images: ["/images/avions.png"],
+    images: ["/images/climat-avions.webp"],
     link: "https://fricks.etu.mmi-unistra.fr/SAE303-site-groupe6/",
+    vpnOnly: true,
     gitLink: "https://github.com/leobrimacombe/SAE-303"
   }
 ];

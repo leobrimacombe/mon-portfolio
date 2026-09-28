@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion';
-import { PROJECTS_DATA } from '../data/projects';
+import { PROJECTS_DATA, SCOPE_LABELS } from '../data/projects';
 import { useProjectFilter } from '../hooks/useProjectFilter';
 import { ProjectCard } from './ProjectCard';
 import { SectionLabel } from './SectionLabel';
@@ -12,12 +12,18 @@ import { DrawLine } from './DrawLine';
 // row keeps the layoutId instead — see ProjectCard).
 const FINE_POINTER = typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches;
 
-// "Work" section: owns the search state (via useProjectFilter) and renders the
-// matching projects grouped by year, newest first. `onSelectProject` bubbles a
+// Scope filter options: everything, then one entry per Project.scope.
+const SCOPE_FILTERS = [
+  { value: 'all', label: 'Tout' },
+  ...Object.entries(SCOPE_LABELS).map(([value, label]) => ({ value, label })),
+];
+
+// "Work" section: owns the search + scope state (via useProjectFilter) and renders
+// the matching projects grouped by year, newest first. `onSelectProject` bubbles a
 // click up to the app so it can open the modal. On desktop, hovering a row reveals
 // a thumbnail of the project that trails the cursor (see `preview` below).
 export const Work = ({ onSelectProject }) => {
-  const { searchQuery, setSearchQuery, filteredProjects, sortedYears } = useProjectFilter();
+  const { searchQuery, setSearchQuery, scope, setScope, filteredProjects, sortedYears } = useProjectFilter();
 
   // Cursor-following preview: which image to show, a random tilt picked per hover so
   // it's never the same twice, plus spring-smoothed pointer position.
@@ -54,9 +60,16 @@ export const Work = ({ onSelectProject }) => {
   // orientation and straightens out (desktop). 0 when there is no preview.
   const handleSelect = (project) => onSelectProject(project, preview ? tilt : 0);
 
+  const showEverything = () => {
+    setSearchQuery('');
+    setScope('all');
+  };
+
   // Warm the browser cache for each project's first image (the hover thumbnail) while
   // the browser is idle, so the preview appears instantly instead of cold-fetching.
+  // Touch screens never show the preview, so they skip the download.
   useEffect(() => {
+    if (!FINE_POINTER) return;
     const preload = () => {
       for (const p of PROJECTS_DATA) {
         const src = p.images?.[0];
@@ -75,8 +88,8 @@ export const Work = ({ onSelectProject }) => {
       className="py-20 md:py-24 px-6 max-w-7xl mx-auto border-b border-white/10"
     >
       {/* Floating thumbnail that trails the cursor over the project list (desktop only).
-          Portaled to <body> with a z above the grain/vignette overlays (z-50/z-40) so it
-          isn't trapped under them by <main>'s z-10 stacking context. */}
+          Portaled to <body> with a z above the grain overlay (z-50) so it isn't trapped
+          under it by <main>'s z-10 stacking context. */}
       {FINE_POINTER && createPortal(
         <AnimatePresence>
           {pointerReady && preview && (
@@ -97,37 +110,57 @@ export const Work = ({ onSelectProject }) => {
 
 
         {/* Header: title on the left, search input on the right */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
-            <SectionLabel className="mb-4 md:mb-0">mes travaux</SectionLabel>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
+            <SectionLabel>Mes travaux</SectionLabel>
 
-            <div className="relative w-full md:w-64 group">
+            <div className="relative w-full md:w-72 group">
                 <input
-                    type="text"
-                    placeholder="RECHERCHER UN PROJET..."
+                    type="search"
+                    aria-label="Rechercher un projet"
+                    placeholder="Rechercher un projet…"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent border-b border-white/20 py-2 pr-8 text-white font-mono text-xs focus:outline-none focus:border-blue-500 transition-colors uppercase placeholder:text-gray-700"
+                    className="w-full bg-transparent border-b border-white/20 py-2 pr-8 text-white font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors uppercase placeholder:text-gray-400 [&::-webkit-search-cancel-button]:hidden"
                 />
 
                 {searchQuery ? (
                     // Clear button (shown while there is a query)
                     <button
+                        type="button"
+                        aria-label="Effacer la recherche"
                         onClick={() => setSearchQuery("")}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 text-white hover:text-blue-500 transition-colors"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 text-white hover:text-blue-500 transition-colors cursor-pointer"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 ) : (
                     // Search icon (shown while the field is empty)
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                         </svg>
                     </div>
                 )}
             </div>
+        </div>
+
+        {/* Scope filter: school (IUT) projects vs client / personal work. */}
+        <div role="group" aria-label="Type de projet" className="flex flex-wrap gap-x-8 gap-y-3 mb-12">
+            {SCOPE_FILTERS.map(({ value, label }) => (
+                <button
+                    key={value}
+                    type="button"
+                    aria-pressed={scope === value}
+                    onClick={() => setScope(value)}
+                    className={`nav-link font-mono text-sm uppercase cursor-pointer transition-colors focus:outline-none focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-blue-500 ${
+                        scope === value ? 'text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    {label}
+                </button>
+            ))}
         </div>
 
         {/* One block per (filtered) year, newest first */}
@@ -148,8 +181,19 @@ export const Work = ({ onSelectProject }) => {
                 </div>
             ))
         ) : (
-            <div className="text-center py-20 text-gray-500 font-mono text-sm">
-                AUCUN PROJET TROUVÉ POUR "{searchQuery}"
+            <div className="text-center py-20 font-mono text-sm text-gray-400">
+                <p>
+                    {searchQuery
+                        ? `Aucun projet ne correspond à « ${searchQuery.trim()} »${scope === 'all' ? '' : ' dans cette catégorie'}.`
+                        : 'Aucun projet dans cette catégorie.'}
+                </p>
+                <button
+                    type="button"
+                    onClick={showEverything}
+                    className="mt-4 text-white underline underline-offset-4 hover:text-blue-400 transition-colors cursor-pointer"
+                >
+                    Afficher tous les projets
+                </button>
             </div>
         )}
     </section>

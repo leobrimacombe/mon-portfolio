@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const KEY = 'pf6:enable3d';       // 'on' | 'off'
-const LOCK = 'pf6:enable3d:user'; // '1' once the user has chosen manually
+const LOCK = 'pf6:enable3d:user'; // '1' once the visitor has chosen manually
 
 // First-visit guess: only the genuinely weak get 3D off by default; everything else
 // starts on and lets the runtime FPS monitor decide. Real GPU power can't be read
@@ -19,42 +19,69 @@ function heuristicDefault() {
   return true;
 }
 
+// Whether the browser can create a WebGL context at all. Without one the hero would
+// stay blank: R3F creates its renderer asynchronously, where no error boundary can
+// catch the failure, so this has to be checked up front.
+function hasWebGL() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    gl?.getExtension('WEBGL_lose_context')?.loseContext(); // release the probe context
+    return Boolean(gl);
+  } catch {
+    return false;
+  }
+}
+
+// The visitor's saved choice ('on' | 'off'), or null. Storage access can throw
+// (cookies / site data blocked), and older builds also saved automatic fallbacks
+// under KEY, so only a value marked as user-made is trusted.
+function readChoice() {
+  try {
+    if (window.localStorage.getItem(LOCK) !== '1') return null;
+    const saved = window.localStorage.getItem(KEY);
+    return saved === 'on' || saved === 'off' ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveChoice(choice) {
+  try {
+    window.localStorage.setItem(KEY, choice);
+    window.localStorage.setItem(LOCK, '1');
+  } catch {
+    // Storage unavailable: the choice still applies for this visit.
+  }
+}
+
 /**
- * Persisted on/off state for the 3D hero, with automatic performance fallback.
+ * On/off state for the 3D hero.
  *
+ * - `supported`   — false when WebGL is unavailable; the 3D then stays off.
  * - `enabled`     — whether to render the 3D scene.
- * - `toggle`      — flip it from the UI; marks the choice as user-made (locked).
- * - `autoDisable` — called by the runtime FPS monitor; drops to the static title,
- *                   but never overrides an explicit user choice (avoids a fight).
+ * - `toggle`      — flip it from the UI; the choice is saved and wins from then on.
+ * - `autoDisable` — called by the runtime FPS monitor (or a crash): drops to the
+ *                   static title for this visit only, and never overrides a choice
+ *                   the visitor made by hand.
  *
- * @returns {{ enabled: boolean, toggle: () => void, autoDisable: () => void }}
+ * @returns {{ supported: boolean, enabled: boolean, toggle: () => void, autoDisable: () => void }}
  */
 export function use3D() {
-  const [enabled, setEnabled] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const saved = window.localStorage.getItem(KEY);
-    if (saved === 'on') return true;
-    if (saved === 'off') return false;
-    return heuristicDefault();
-  });
+  const [supported] = useState(hasWebGL);
+  const [defaultOn] = useState(heuristicDefault);
+  const [choice, setChoice] = useState(readChoice);
+  const [autoOff, setAutoOff] = useState(false);
 
-  const [userLocked, setUserLocked] = useState(
-    () => typeof window !== 'undefined' && window.localStorage.getItem(LOCK) === '1'
-  );
-
-  useEffect(() => {
-    window.localStorage.setItem(KEY, enabled ? 'on' : 'off');
-  }, [enabled]);
+  const enabled = supported && (choice ? choice === 'on' : defaultOn && !autoOff);
 
   const toggle = () => {
-    setUserLocked(true);
-    window.localStorage.setItem(LOCK, '1');
-    setEnabled((v) => !v);
+    const next = enabled ? 'off' : 'on';
+    setChoice(next);
+    saveChoice(next);
   };
 
-  const autoDisable = () => {
-    if (!userLocked) setEnabled(false);
-  };
+  const autoDisable = () => setAutoOff(true);
 
-  return { enabled, toggle, autoDisable };
+  return { supported, enabled, toggle, autoDisable };
 }

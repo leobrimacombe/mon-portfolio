@@ -1,18 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PROFILE } from '../data/profile';
 
-// Mobile full-screen menu links.
+// The CV joins both menus once a PDF is set in data/profile.js (opens in a new tab).
+const CV_LINK = PROFILE.cv ? [{ label: 'CV', href: PROFILE.cv, external: true }] : [];
+
+// Mobile full-screen menu links (Contact has its own button there).
 const MENU_LINKS = [
-  { label: 'A PROPOS', href: '#about' },
+  { label: 'À PROPOS', href: '#about' },
   { label: 'MES TRAVAUX', href: '#work' },
+  ...CV_LINK,
 ];
 
 // Desktop corner-menu links (revealed on hover / focus).
 const NAV_LINKS = [
-  { label: 'A PROPOS', href: '#about' },
-  { label: 'MON TRAVAIL', href: '#work' },
+  { label: 'À PROPOS', href: '#about' },
+  { label: 'MES TRAVAUX', href: '#work' },
   { label: 'CONTACT', href: '#contact' },
+  ...CV_LINK,
 ];
+
+// New-tab attributes for external links (the CV), nothing for in-page anchors.
+const linkTarget = (link) => (link.external ? { target: '_blank', rel: 'noreferrer' } : {});
 
 // Border-less frosted backdrop: blur + tint that fade out radially (mask) so there's
 // no hard edge. Lives BEHIND content so text stays crisp.
@@ -71,6 +80,7 @@ export const Nav = ({ isMenuOpen, setMenuOpen }) => {
               window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
             }}
             aria-label="Retourner en haut"
+            tabIndex={scrolled ? 0 : -1}
             className={`hidden md:inline-block font-sync font-bold text-sm md:text-lg cursor-pointer px-4 py-2 rounded-full bg-black/40 backdrop-blur-md text-white shadow-lg shadow-black/20 transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
               scrolled ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-3 pointer-events-none'
             }`}
@@ -121,7 +131,7 @@ export const Nav = ({ isMenuOpen, setMenuOpen }) => {
                   className="absolute inset-y-0 right-0 flex items-center gap-6 whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
                 >
                   {NAV_LINKS.map((l) => (
-                    <a key={l.href} href={l.href} className="nav-link font-mono text-xs uppercase text-white hover:text-blue-400 transition-colors cursor-pointer">
+                    <a key={l.href} href={l.href} {...linkTarget(l)} className="nav-link font-mono text-xs uppercase text-white hover:text-blue-400 transition-colors cursor-pointer">
                       {l.label}
                     </a>
                   ))}
@@ -140,7 +150,7 @@ export const Nav = ({ isMenuOpen, setMenuOpen }) => {
               >
                   <motion.div className="flex flex-col gap-8 text-center" initial="closed" animate="open" variants={{ open: { transition: { staggerChildren: 0.1 } } }}>
                       {MENU_LINKS.map((item) => (
-                          <motion.a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} variants={{ closed: { opacity: 0, y: 20 }, open: { opacity: 1, y: 0 } }} className="text-4xl font-sync font-black text-white hover:text-blue-600 transition-colors">
+                          <motion.a key={item.href} href={item.href} {...linkTarget(item)} onClick={() => setMenuOpen(false)} variants={{ closed: { opacity: 0, y: 20 }, open: { opacity: 1, y: 0 } }} className="text-4xl font-sync font-black text-white hover:text-blue-600 transition-colors">
                               {item.label}
                           </motion.a>
                       ))}
